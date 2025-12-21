@@ -1,4 +1,4 @@
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertServiceSchema } from "@shared/schema";
 import { useCreateService } from "@/hooks/use-services";
@@ -6,7 +6,8 @@ import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import { format } from "date-fns";
 import { sv as svSE } from "date-fns/locale";
-import { CalendarIcon, Plus } from "lucide-react";
+import { CalendarIcon, Plus, X } from "lucide-react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 import {
@@ -44,7 +45,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { useState } from "react";
 
 const serviceCategories = {
   "Oljeservice": ["Motorolja", "Oljefilter"],
@@ -62,10 +62,18 @@ const serviceCategories = {
 
 const serviceTypes = Object.values(serviceCategories).flat();
 
-const formSchema = insertServiceSchema.omit({ vehicleId: true }).extend({
-  mileage: z.coerce.number().min(0),
+const serviceItemSchema = z.object({
+  type: z.string(),
   cost: z.coerce.number().optional(),
+  notes: z.string().optional(),
+});
+
+type ServiceItem = z.infer<typeof serviceItemSchema>;
+
+const formSchema = z.object({
   date: z.date(),
+  mileage: z.coerce.number().min(0),
+  items: z.array(serviceItemSchema).min(1, "Lägg till minst en serviceart"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -83,40 +91,55 @@ export function AddServiceDialog({ vehicleId, currentMileage }: AddServiceDialog
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      type: "Motorolja",
       date: new Date(),
       mileage: currentMileage || 0,
-      cost: 0,
-      notes: "",
+      items: [{ type: "Motorolja", cost: 0, notes: "" }],
     },
   });
 
-  const onSubmit = (data: FormValues) => {
-    const payload = {
-      ...data,
-      cost: data.cost ? Math.round(data.cost * 100) : undefined
-    };
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "items",
+  });
 
-    createService({ vehicleId, ...payload }, {
-      onSuccess: () => {
-        toast({ title: "Service loggad framgångsrikt!" });
-        setOpen(false);
-        form.reset({
-          type: "Motorolja",
-          date: new Date(),
-          mileage: data.mileage,
-          cost: 0,
-          notes: "",
+  const onSubmit = async (data: FormValues) => {
+    try {
+      const date = data.date;
+      const mileage = data.mileage;
+
+      // Create all service items
+      for (const item of data.items) {
+        const payload = {
+          type: item.type,
+          date,
+          mileage,
+          cost: item.cost ? Math.round(item.cost * 100) : undefined,
+          notes: item.notes,
+          vehicleId,
+        };
+
+        await new Promise((resolve, reject) => {
+          createService(payload, {
+            onSuccess: resolve,
+            onError: reject,
+          });
         });
-      },
-      onError: (error) => {
-        toast({ 
-          title: "Det gick inte att logga service", 
-          description: error.message,
-          variant: "destructive" 
-        });
-      },
-    });
+      }
+
+      toast({ title: "Service loggad framgångsrikt!" });
+      setOpen(false);
+      form.reset({
+        date: new Date(),
+        mileage: data.mileage,
+        items: [{ type: "Motorolja", cost: 0, notes: "" }],
+      });
+    } catch (error: any) {
+      toast({ 
+        title: "Det gick inte att logga service", 
+        description: error?.message || "Något gick fel",
+        variant: "destructive" 
+      });
+    }
   };
 
   return (
@@ -126,45 +149,17 @@ export function AddServiceDialog({ vehicleId, currentMileage }: AddServiceDialog
           <Plus className="w-4 h-4" /> Logga service
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Logga service</DialogTitle>
           <DialogDescription>
-            Registrera underhållsdetaljer för din historia.
+            Registrera underhållsdetaljer för din historia. Du kan lägga till flera servicetyper i samma logg.
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Servictyp</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Välj typ" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {Object.entries(serviceCategories).map(([category, types]) => (
-                          <SelectGroup key={category}>
-                            <SelectLabel>{category}</SelectLabel>
-                            {types.map(type => (
-                              <SelectItem key={type} value={type}>{type}</SelectItem>
-                            ))}
-                          </SelectGroup>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
               <FormField
                 control={form.control}
                 name="date"
@@ -206,9 +201,6 @@ export function AddServiceDialog({ vehicleId, currentMileage }: AddServiceDialog
                   </FormItem>
                 )}
               />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="mileage"
@@ -222,39 +214,105 @@ export function AddServiceDialog({ vehicleId, currentMileage }: AddServiceDialog
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="cost"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Kostnad (kr)</FormLabel>
-                    <FormControl>
-                      <Input type="number" step="0.01" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </div>
 
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Anteckningar</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Detaljer om delar, mekaniker, iakttagelser..." 
-                      className="resize-none" 
-                      {...field} 
-                      value={field.value || ''}
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <FormLabel>Servicetyper</FormLabel>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => append({ type: "Motorolja", cost: 0, notes: "" })}
+                >
+                  <Plus className="w-4 h-4 mr-1" /> Lägg till serviceart
+                </Button>
+              </div>
+
+              <div className="space-y-3 bg-muted/30 p-4 rounded-lg">
+                {fields.map((field, index) => (
+                  <div key={field.id} className="space-y-2 p-3 bg-background rounded border">
+                    <div className="flex justify-between items-center">
+                      <FormLabel className="text-sm">Service {index + 1}</FormLabel>
+                      {fields.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => remove(index)}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+
+                    <FormField
+                      control={form.control}
+                      name={`items.${index}.type`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <Select value={field.value} onValueChange={field.onChange}>
+                            <FormControl>
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Välj serviceart" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {Object.entries(serviceCategories).map(([category, types]) => (
+                                <SelectGroup key={category}>
+                                  <SelectLabel>{category}</SelectLabel>
+                                  {types.map(type => (
+                                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                                  ))}
+                                </SelectGroup>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <FormField
+                        control={form.control}
+                        name={`items.${index}.cost`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">Kostnad (kr)</FormLabel>
+                            <FormControl>
+                              <Input type="number" step="0.01" placeholder="0" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <div />
+                    </div>
+
+                    <FormField
+                      control={form.control}
+                      name={`items.${index}.notes`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">Anteckningar</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Detaljer..." 
+                              className="resize-none h-12 text-xs" 
+                              {...field} 
+                              value={field.value || ''}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                ))}
+              </div>
+              <FormMessage>{form.formState.errors.items?.message}</FormMessage>
+            </div>
 
             <DialogFooter className="pt-4">
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>Avbryt</Button>
