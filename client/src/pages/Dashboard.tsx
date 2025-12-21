@@ -62,7 +62,7 @@ export default function Dashboard() {
                 <List className="w-4 h-4" />
               </Button>
             </div>
-            <AddVehicleDialog />
+            <AddVehicleDialog vehicleCount={vehicles?.length || 0} />
           </div>
         </div>
 
@@ -94,7 +94,7 @@ function EmptyState() {
       <p className="text-muted-foreground max-w-sm mb-8">
         Lägg till din första bil för att börja spara servicehistorik och få påminnelser om underhåll.
       </p>
-      <AddVehicleDialog />
+      <AddVehicleDialog vehicleCount={vehicles?.length || 0} />
     </div>
   );
 }

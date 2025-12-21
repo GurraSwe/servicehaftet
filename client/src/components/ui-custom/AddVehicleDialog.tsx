@@ -25,7 +25,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus } from "lucide-react";
+import { Plus, Crown } from "lucide-react";
 import { useState } from "react";
 
 const formSchema = insertVehicleSchema.extend({
@@ -37,10 +37,17 @@ const formSchema = insertVehicleSchema.extend({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export function AddVehicleDialog() {
+interface AddVehicleDialogProps {
+  vehicleCount?: number;
+}
+
+export function AddVehicleDialog({ vehicleCount = 0 }: AddVehicleDialogProps) {
   const [open, setOpen] = useState(false);
+  const [showUpgrade, setShowUpgrade] = useState(false);
   const { mutate: createVehicle, isPending } = useCreateVehicle();
   const { toast } = useToast();
+  
+  const hasReachedLimit = vehicleCount >= 1;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -74,6 +81,58 @@ export function AddVehicleDialog() {
       },
     });
   };
+
+  if (hasReachedLimit) {
+    return (
+      <>
+        <Dialog open={showUpgrade} onOpenChange={setShowUpgrade}>
+          <DialogTrigger asChild>
+            <Button className="gap-2 shadow-lg hover:shadow-primary/25 transition-all">
+              <Plus className="w-4 h-4" /> Lägg till bil
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[400px]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Crown className="w-5 h-5 text-yellow-500" />
+                Uppgradera till Premium
+              </DialogTitle>
+              <DialogDescription>
+                Du har nått gränsen för gratisversionen (1 fordon).
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-6 text-center">
+              <div className="text-4xl font-bold mb-2">49 kr</div>
+              <div className="text-muted-foreground">Engångsbetalning</div>
+              <ul className="mt-6 text-left space-y-2 text-sm">
+                <li className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-primary rounded-full" />
+                  Obegränsat antal fordon
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-primary rounded-full" />
+                  Alla funktioner inkluderade
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-primary rounded-full" />
+                  Livstidsåtkomst
+                </li>
+              </ul>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowUpgrade(false)}>Avbryt</Button>
+              <Button className="gap-2" onClick={() => {
+                toast({ title: "Tack för ditt intresse!", description: "Betalningsfunktionen kommer snart." });
+                setShowUpgrade(false);
+              }}>
+                <Crown className="w-4 h-4" /> Uppgradera nu
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
