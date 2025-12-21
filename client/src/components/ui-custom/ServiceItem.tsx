@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { sv as svSE } from "date-fns/locale";
 import { type Service } from "@shared/schema";
 import { Wrench, Droplet, Disc, AlertCircle, FileText, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,10 +23,10 @@ interface ServiceItemProps {
 
 const getIconForType = (type: string) => {
   const t = type.toLowerCase();
-  if (t.includes("oil")) return <Droplet className="w-5 h-5 text-amber-500" />;
-  if (t.includes("brake")) return <Disc className="w-5 h-5 text-red-500" />;
-  if (t.includes("tire")) return <Disc className="w-5 h-5 text-slate-500" />;
-  if (t.includes("repair")) return <Wrench className="w-5 h-5 text-blue-500" />;
+  if (t.includes("olje")) return <Droplet className="w-5 h-5 text-amber-500" />;
+  if (t.includes("brom")) return <Disc className="w-5 h-5 text-red-500" />;
+  if (t.includes("däck")) return <Disc className="w-5 h-5 text-slate-500" />;
+  if (t.includes("reparation")) return <Wrench className="w-5 h-5 text-blue-500" />;
   return <Wrench className="w-5 h-5 text-primary" />;
 };
 
@@ -36,10 +37,10 @@ export function ServiceItem({ service }: ServiceItemProps) {
   const handleDelete = () => {
     deleteService({ id: service.id, vehicleId: service.vehicleId }, {
       onSuccess: () => {
-        toast({ title: "Service log deleted" });
+        toast({ title: "Serviceregister raderat" });
       },
       onError: () => {
-        toast({ title: "Failed to delete log", variant: "destructive" });
+        toast({ title: "Det gick inte att radera registret", variant: "destructive" });
       }
     });
   };
@@ -56,17 +57,17 @@ export function ServiceItem({ service }: ServiceItemProps) {
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1">
           <h4 className="font-semibold text-lg text-foreground truncate">{service.type}</h4>
           <span className="text-sm text-muted-foreground whitespace-nowrap">
-            {format(new Date(service.date), "MMM d, yyyy")}
+            {format(new Date(service.date), "PPP", { locale: svSE })}
           </span>
         </div>
         
         <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
           <span className="flex items-center gap-1">
-            <span className="font-medium text-foreground">{service.mileage.toLocaleString()}</span> miles
+            <span className="font-medium text-foreground">{service.mileage.toLocaleString('sv-SE')}</span> km
           </span>
           {service.cost && (
             <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/10 text-green-700 dark:text-green-400 font-medium text-xs">
-              ${(service.cost / 100).toFixed(2)}
+              {(service.cost / 100).toLocaleString('sv-SE', { minimumFractionDigits: 2 })} kr
             </span>
           )}
         </div>
@@ -88,15 +89,15 @@ export function ServiceItem({ service }: ServiceItemProps) {
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Delete service log?</AlertDialogTitle>
+              <AlertDialogTitle>Radera serviceregister?</AlertDialogTitle>
               <AlertDialogDescription>
-                This action cannot be undone. This will permanently remove this service record from your history.
+                Den här åtgärden kan inte ångras. Det raderar detta serviceregister från din historia.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogCancel>Avbryt</AlertDialogCancel>
               <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
-                Delete
+                Radera
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

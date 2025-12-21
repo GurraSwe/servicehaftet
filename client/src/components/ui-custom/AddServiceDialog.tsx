@@ -5,6 +5,7 @@ import { useCreateService } from "@/hooks/use-services";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import { format } from "date-fns";
+import { sv as svSE } from "date-fns/locale";
 import { CalendarIcon, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -44,22 +45,21 @@ import {
 import { useState } from "react";
 
 const serviceTypes = [
-  "Oil Change",
-  "Tire Rotation",
-  "Brake Service",
-  "Battery Replacement",
-  "Filter Replacement",
-  "Inspection",
-  "Fluid Top-up",
-  "Repair",
-  "Other"
+  "Oljebyte",
+  "Däckrotation",
+  "Bromservice",
+  "Batteribyte",
+  "Filterbyte",
+  "Inspektion",
+  "Vätsketillsats",
+  "Reparation",
+  "Övrigt"
 ];
 
-// Frontend validation schema
 const formSchema = insertServiceSchema.omit({ vehicleId: true }).extend({
   mileage: z.coerce.number().min(0),
   cost: z.coerce.number().optional(),
-  date: z.date(), // Date object for picker, coerced to string on submit
+  date: z.date(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -77,7 +77,7 @@ export function AddServiceDialog({ vehicleId, currentMileage }: AddServiceDialog
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      type: "Oil Change",
+      type: "Oljebyte",
       date: new Date(),
       mileage: currentMileage || 0,
       cost: 0,
@@ -86,7 +86,6 @@ export function AddServiceDialog({ vehicleId, currentMileage }: AddServiceDialog
   });
 
   const onSubmit = (data: FormValues) => {
-    // Convert cost to cents for storage if using integers
     const payload = {
       ...data,
       cost: data.cost ? Math.round(data.cost * 100) : undefined
@@ -94,19 +93,19 @@ export function AddServiceDialog({ vehicleId, currentMileage }: AddServiceDialog
 
     createService({ vehicleId, ...payload }, {
       onSuccess: () => {
-        toast({ title: "Service logged successfully!" });
+        toast({ title: "Service loggad framgångsrikt!" });
         setOpen(false);
         form.reset({
-          type: "Oil Change",
+          type: "Oljebyte",
           date: new Date(),
-          mileage: data.mileage, // Keep the new mileage
+          mileage: data.mileage,
           cost: 0,
           notes: "",
         });
       },
       onError: (error) => {
         toast({ 
-          title: "Failed to log service", 
+          title: "Det gick inte att logga service", 
           description: error.message,
           variant: "destructive" 
         });
@@ -118,14 +117,14 @@ export function AddServiceDialog({ vehicleId, currentMileage }: AddServiceDialog
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md">
-          <Plus className="w-4 h-4" /> Log Service
+          <Plus className="w-4 h-4" /> Logga service
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Log Service</DialogTitle>
+          <DialogTitle>Logga service</DialogTitle>
           <DialogDescription>
-            Record maintenance details for your history.
+            Registrera underhållsdetaljer för din historia.
           </DialogDescription>
         </DialogHeader>
 
@@ -137,11 +136,11 @@ export function AddServiceDialog({ vehicleId, currentMileage }: AddServiceDialog
                 name="type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Service Type</FormLabel>
+                    <FormLabel>Servictyp</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select type" />
+                          <SelectValue placeholder="Välj typ" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -160,7 +159,7 @@ export function AddServiceDialog({ vehicleId, currentMileage }: AddServiceDialog
                 name="date"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>Date</FormLabel>
+                    <FormLabel>Datum</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
@@ -172,9 +171,9 @@ export function AddServiceDialog({ vehicleId, currentMileage }: AddServiceDialog
                             )}
                           >
                             {field.value ? (
-                              format(field.value, "PPP")
+                              format(field.value, "PPP", { locale: svSE })
                             ) : (
-                              <span>Pick a date</span>
+                              <span>Välj ett datum</span>
                             )}
                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
@@ -204,7 +203,7 @@ export function AddServiceDialog({ vehicleId, currentMileage }: AddServiceDialog
                 name="mileage"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Mileage</FormLabel>
+                    <FormLabel>Körsträcka (km)</FormLabel>
                     <FormControl>
                       <Input type="number" {...field} />
                     </FormControl>
@@ -217,7 +216,7 @@ export function AddServiceDialog({ vehicleId, currentMileage }: AddServiceDialog
                 name="cost"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Cost ($)</FormLabel>
+                    <FormLabel>Kostnad (kr)</FormLabel>
                     <FormControl>
                       <Input type="number" step="0.01" {...field} />
                     </FormControl>
@@ -232,10 +231,10 @@ export function AddServiceDialog({ vehicleId, currentMileage }: AddServiceDialog
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Notes</FormLabel>
+                  <FormLabel>Anteckningar</FormLabel>
                   <FormControl>
                     <Textarea 
-                      placeholder="Details about parts, mechanic, observations..." 
+                      placeholder="Detaljer om delar, mekaniker, iakttagelser..." 
                       className="resize-none" 
                       {...field} 
                       value={field.value || ''}
@@ -247,9 +246,9 @@ export function AddServiceDialog({ vehicleId, currentMileage }: AddServiceDialog
             />
 
             <DialogFooter className="pt-4">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>Avbryt</Button>
               <Button type="submit" disabled={isPending}>
-                {isPending ? "Saving..." : "Save Record"}
+                {isPending ? "Sparar..." : "Spara register"}
               </Button>
             </DialogFooter>
           </form>

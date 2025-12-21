@@ -22,7 +22,7 @@ export default function Dashboard() {
         <div className="container flex h-16 items-center justify-between">
           <h1 className="font-display font-bold text-xl flex items-center gap-2">
             <span className="text-primary">Garage</span>
-            <span className="text-muted-foreground text-sm font-normal hidden sm:inline-block">/ {user?.firstName || 'My'} Dashboard</span>
+            <span className="text-muted-foreground text-sm font-normal hidden sm:inline-block">/ {user?.firstName || 'Min'} instrumentpanel</span>
           </h1>
           <div className="flex items-center gap-4">
             <div className="text-sm text-muted-foreground hidden sm:block">
@@ -30,7 +30,7 @@ export default function Dashboard() {
             </div>
             <Button variant="ghost" size="sm" onClick={() => logout()} className="text-muted-foreground hover:text-foreground">
               <LogOut className="w-4 h-4 mr-2" />
-              Sign Out
+              Logga ut
             </Button>
           </div>
         </div>
@@ -40,8 +40,8 @@ export default function Dashboard() {
       <main className="container py-8 sm:py-10">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
-            <h2 className="text-3xl font-display font-bold tracking-tight">Your Vehicles</h2>
-            <p className="text-muted-foreground mt-1">Manage your fleet maintenance and history.</p>
+            <h2 className="text-3xl font-display font-bold tracking-tight">Dina bilar</h2>
+            <p className="text-muted-foreground mt-1">Hantera ditt flottas underhåll och historia.</p>
           </div>
           <div className="flex items-center gap-2">
             <div className="border border-border rounded-lg p-1 flex items-center gap-1 mr-2 bg-card">
@@ -68,7 +68,7 @@ export default function Dashboard() {
 
         {error ? (
           <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-8 text-center text-destructive">
-            <p>Failed to load vehicles. Please try again later.</p>
+            <p>Det gick inte att ladda bilar. Försök igen senare.</p>
           </div>
         ) : vehicles?.length === 0 ? (
           <EmptyState />
@@ -90,9 +90,9 @@ function EmptyState() {
       <div className="w-20 h-20 bg-muted/50 rounded-full flex items-center justify-center mb-6">
         <LayoutGrid className="w-10 h-10 text-muted-foreground" />
       </div>
-      <h3 className="text-xl font-bold font-display mb-2">No vehicles yet</h3>
+      <h3 className="text-xl font-bold font-display mb-2">Ingen bilar ännu</h3>
       <p className="text-muted-foreground max-w-sm mb-8">
-        Add your first vehicle to start tracking maintenance history and reminders.
+        Lägg till din första bil för att börja spåra underhållshistorik och påminnelser.
       </p>
       <AddVehicleDialog />
     </div>

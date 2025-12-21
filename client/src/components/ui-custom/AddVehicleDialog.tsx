@@ -28,7 +28,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 
-// Frontend validation schema (ensure numbers are coerced)
 const formSchema = insertVehicleSchema.extend({
   year: z.coerce.number().min(1900).max(new Date().getFullYear() + 1),
   currentMileage: z.coerce.number().min(0),
@@ -58,13 +57,13 @@ export function AddVehicleDialog() {
   const onSubmit = (data: FormValues) => {
     createVehicle(data, {
       onSuccess: () => {
-        toast({ title: "Vehicle added successfully!" });
+        toast({ title: "Bil tillagd framgångsrikt!" });
         setOpen(false);
         form.reset();
       },
       onError: (error) => {
         toast({ 
-          title: "Failed to add vehicle", 
+          title: "Det gick inte att lägga till bil", 
           description: error.message,
           variant: "destructive" 
         });
@@ -76,14 +75,14 @@ export function AddVehicleDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button className="gap-2 shadow-lg hover:shadow-primary/25 transition-all">
-          <Plus className="w-4 h-4" /> Add Vehicle
+          <Plus className="w-4 h-4" /> Lägg till bil
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px] overflow-y-auto max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle>Add New Vehicle</DialogTitle>
+          <DialogTitle>Lägg till ny bil</DialogTitle>
           <DialogDescription>
-            Enter your vehicle details to start tracking maintenance.
+            Ange bilens uppgifter för att börja spåra underhål.
           </DialogDescription>
         </DialogHeader>
 
@@ -94,9 +93,9 @@ export function AddVehicleDialog() {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nickname (optional)</FormLabel>
+                  <FormLabel>Smeknamn (valfritt)</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g. My Daily Driver" {...field} value={field.value || ''} />
+                    <Input placeholder="t.ex. Min dagliga bil" {...field} value={field.value || ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -109,7 +108,7 @@ export function AddVehicleDialog() {
                 name="make"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Make</FormLabel>
+                    <FormLabel>Märke</FormLabel>
                     <FormControl>
                       <Input placeholder="Toyota" {...field} />
                     </FormControl>
@@ -122,7 +121,7 @@ export function AddVehicleDialog() {
                 name="model"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Model</FormLabel>
+                    <FormLabel>Modell</FormLabel>
                     <FormControl>
                       <Input placeholder="Camry" {...field} />
                     </FormControl>
@@ -138,7 +137,7 @@ export function AddVehicleDialog() {
                 name="year"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Year</FormLabel>
+                    <FormLabel>År</FormLabel>
                     <FormControl>
                       <Input type="number" {...field} />
                     </FormControl>
@@ -151,7 +150,7 @@ export function AddVehicleDialog() {
                 name="currentMileage"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Current Mileage</FormLabel>
+                    <FormLabel>Nuvarande körsträcka (km)</FormLabel>
                     <FormControl>
                       <Input type="number" {...field} />
                     </FormControl>
@@ -167,7 +166,7 @@ export function AddVehicleDialog() {
                 name="licensePlate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>License Plate</FormLabel>
+                    <FormLabel>Registreringsskyllt</FormLabel>
                     <FormControl>
                       <Input placeholder="ABC-123" {...field} value={field.value || ''} />
                     </FormControl>
@@ -182,7 +181,7 @@ export function AddVehicleDialog() {
                   <FormItem>
                     <FormLabel>VIN</FormLabel>
                     <FormControl>
-                      <Input placeholder="Optional" {...field} value={field.value || ''} />
+                      <Input placeholder="Valfritt" {...field} value={field.value || ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -195,10 +194,10 @@ export function AddVehicleDialog() {
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Notes</FormLabel>
+                  <FormLabel>Anteckningar</FormLabel>
                   <FormControl>
                     <Textarea 
-                      placeholder="Any specific details about this car..." 
+                      placeholder="Några specifika detaljer om denna bil..." 
                       className="resize-none" 
                       {...field} 
                       value={field.value || ''}
@@ -210,9 +209,9 @@ export function AddVehicleDialog() {
             />
 
             <DialogFooter className="pt-4">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>Avbryt</Button>
               <Button type="submit" disabled={isPending}>
-                {isPending ? "Adding..." : "Add Vehicle"}
+                {isPending ? "Lägger till..." : "Lägg till bil"}
               </Button>
             </DialogFooter>
           </form>

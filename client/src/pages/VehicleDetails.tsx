@@ -10,18 +10,18 @@ import { ServiceItem } from "@/components/ui-custom/ServiceItem";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDistanceToNow } from "date-fns";
+import { sv as svSE } from "date-fns/locale";
 
 export default function VehicleDetails() {
   const { id } = useParams<{ id: string }>();
   const vehicleId = Number(id);
-  const [location] = useLocation(); // To possibly handle tab state via URL
+  const [location] = useLocation();
   
   const { data: vehicle, isLoading: vehicleLoading } = useVehicle(vehicleId);
   const { data: services, isLoading: servicesLoading } = useServices(vehicleId);
-  // const { data: reminders } = useReminders(vehicleId); // Future implementation
 
   if (vehicleLoading) return <DetailsSkeleton />;
-  if (!vehicle) return <div className="p-8 text-center">Vehicle not found</div>;
+  if (!vehicle) return <div className="p-8 text-center">Bil hittades inte</div>;
 
   // Calculate stats
   const totalSpent = services?.reduce((sum, s) => sum + (s.cost || 0), 0) || 0;
@@ -36,7 +36,7 @@ export default function VehicleDetails() {
         <div className="container py-6">
           <Link href="/dashboard">
             <Button variant="ghost" size="sm" className="mb-4 text-muted-foreground hover:text-foreground pl-0 hover:bg-transparent">
-              <ChevronLeft className="w-4 h-4 mr-1" /> Back to Garage
+              <ChevronLeft className="w-4 h-4 mr-1" /> Tillbaka till garage
             </Button>
           </Link>
           
@@ -49,14 +49,14 @@ export default function VehicleDetails() {
                 <span className="font-medium">{vehicle.year} {vehicle.make} {vehicle.model}</span>
                 <span className="w-1 h-1 bg-muted-foreground rounded-full" />
                 <span className="bg-muted px-2 py-0.5 rounded text-xs font-mono font-bold border border-border">
-                  {vehicle.licensePlate || "NO PLATE"}
+                  {vehicle.licensePlate || "INGEN REGISTRERING"}
                 </span>
               </div>
             </div>
             
             <div className="flex gap-3">
               <Button variant="outline" size="sm" className="hidden sm:flex">
-                <Settings className="w-4 h-4 mr-2" /> Edit Vehicle
+                <Settings className="w-4 h-4 mr-2" /> Redigera bil
               </Button>
               <AddServiceDialog vehicleId={vehicleId} currentMileage={vehicle.currentMileage || 0} />
             </div>
@@ -68,41 +68,41 @@ export default function VehicleDetails() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Current Mileage</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Nuvarande körsträcka</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold flex items-center gap-2">
                 <Gauge className="w-5 h-5 text-primary" />
-                {vehicle.currentMileage?.toLocaleString()}
+                {vehicle.currentMileage?.toLocaleString('sv-SE')} km
               </div>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Invested</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Totalt investerat</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                ${(totalSpent / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                {(totalSpent / 100).toLocaleString('sv-SE', { minimumFractionDigits: 2 })} kr
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Last Service</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Senaste service</CardTitle>
             </CardHeader>
             <CardContent>
               {lastService ? (
                 <div>
                   <div className="text-lg font-bold truncate">{lastService.type}</div>
                   <div className="text-xs text-muted-foreground mt-1">
-                    {formatDistanceToNow(new Date(lastService.date), { addSuffix: true })}
+                    {formatDistanceToNow(new Date(lastService.date), { addSuffix: true, locale: svSE })}
                   </div>
                 </div>
               ) : (
-                <div className="text-muted-foreground italic">No services yet</div>
+                <div className="text-muted-foreground italic">Ingen service ännu</div>
               )}
             </CardContent>
           </Card>
@@ -114,19 +114,19 @@ export default function VehicleDetails() {
               value="history" 
               className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-0 py-3 font-semibold text-muted-foreground data-[state=active]:text-foreground transition-all"
             >
-              Service History
+              Servicehistorik
             </TabsTrigger>
             <TabsTrigger 
               value="reminders" 
               className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-0 py-3 font-semibold text-muted-foreground data-[state=active]:text-foreground transition-all"
             >
-              Reminders
+              Påminnelser
             </TabsTrigger>
             <TabsTrigger 
               value="notes" 
               className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-0 py-3 font-semibold text-muted-foreground data-[state=active]:text-foreground transition-all"
             >
-              Notes
+              Anteckningar
             </TabsTrigger>
           </TabsList>
           
@@ -140,12 +140,11 @@ export default function VehicleDetails() {
             ) : services?.length === 0 ? (
               <div className="text-center py-20 bg-card rounded-xl border border-dashed">
                 <PenTool className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
-                <h3 className="font-semibold text-lg">No service history</h3>
-                <p className="text-muted-foreground mb-6">Log your first maintenance record.</p>
+                <h3 className="font-semibold text-lg">Ingen servicehistorik</h3>
+                <p className="text-muted-foreground mb-6">Logga ditt första underhållsprotokolle.</p>
                 <AddServiceDialog vehicleId={vehicleId} currentMileage={vehicle.currentMileage || 0} />
               </div>
             ) : (
-              // Sort by date descending
               services?.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
                 .map((service) => (
                   <ServiceItem key={service.id} service={service} />
@@ -156,18 +155,18 @@ export default function VehicleDetails() {
           <TabsContent value="reminders">
              <div className="bg-card rounded-xl border border-border p-8 text-center">
                <AlertTriangle className="w-12 h-12 text-accent/50 mx-auto mb-4" />
-               <h3 className="text-lg font-semibold">Reminders coming soon</h3>
+               <h3 className="text-lg font-semibold">Påminnelser kommer snart</h3>
                <p className="text-muted-foreground">
-                 This feature will help you track upcoming maintenance based on mileage intervals.
+                 Den här funktionen hjälper dig att spåra kommande underhål baserat på körsträcka.
                </p>
              </div>
           </TabsContent>
 
           <TabsContent value="notes">
              <div className="bg-card rounded-xl border border-border p-6">
-               <h3 className="font-semibold mb-4">Vehicle Notes</h3>
+               <h3 className="font-semibold mb-4">Bilanteckningar</h3>
                <p className="text-muted-foreground whitespace-pre-wrap">
-                 {vehicle.notes || "No notes added for this vehicle."}
+                 {vehicle.notes || "Ingen anteckningar tillagd för denna bil."}
                </p>
              </div>
           </TabsContent>

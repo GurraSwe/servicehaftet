@@ -28,12 +28,12 @@ export default function Landing() {
                 isAuthenticated ? (
                   <Link href="/dashboard">
                     <Button variant="default" className="font-semibold shadow-lg shadow-primary/20">
-                      Go to Dashboard
+                      Gå till instrumentpanel
                     </Button>
                   </Link>
                 ) : (
                   <Button onClick={handleLogin} variant="default" className="font-semibold shadow-lg shadow-primary/20">
-                    Log In / Sign Up
+                    Logga in / Registrera
                   </Button>
                 )
               )}
@@ -54,11 +54,11 @@ export default function Landing() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div className="text-center max-w-3xl mx-auto">
               <h1 className="text-5xl sm:text-6xl md:text-7xl font-display font-bold tracking-tight mb-6">
-                Your Digital <span className="text-gradient">Service Book</span>
+                Ditt digitala <span className="text-gradient">servicehäfte</span>
               </h1>
               <p className="text-xl text-muted-foreground mb-10 leading-relaxed max-w-2xl mx-auto">
-                Track maintenance, monitor mileage, and get service reminders. 
-                Keep your vehicle healthy and your history organized in one place.
+                Spåra underhåll, övervaka körsträcka och få servicepaddelningar. 
+                Håll din bil frisk och din historia organiserad på ett ställe.
               </p>
               
               <div className="flex flex-col sm:flex-row justify-center gap-4">
@@ -67,14 +67,14 @@ export default function Landing() {
                   size="lg" 
                   className="text-lg h-14 px-8 rounded-xl shadow-xl shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-1 transition-all duration-300"
                 >
-                  Start Tracking Free <ChevronRight className="ml-2 w-5 h-5" />
+                  Börja spåra kostnadsfritt <ChevronRight className="ml-2 w-5 h-5" />
                 </Button>
                 <Button 
                   variant="outline" 
                   size="lg" 
                   className="text-lg h-14 px-8 rounded-xl border-2 hover:bg-muted/50"
                 >
-                  Learn More
+                  Läs mer
                 </Button>
               </div>
             </div>
@@ -90,9 +90,9 @@ export default function Landing() {
                 <div className="w-14 h-14 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mb-6 text-primary">
                   <History className="w-7 h-7" />
                 </div>
-                <h3 className="text-xl font-bold font-display mb-3">Full Service History</h3>
+                <h3 className="text-xl font-bold font-display mb-3">Fullständig servicehistorik</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  Never lose a receipt or forget when you last changed your oil. Keep a detailed log of every maintenance event.
+                  Glöm aldrig ett kvitto eller när du senast bytte olja. Führa en detaljerad logg över varje underhållshändelse.
                 </p>
               </div>
 
@@ -101,9 +101,9 @@ export default function Landing() {
                 <div className="w-14 h-14 bg-orange-100 dark:bg-orange-900/30 rounded-2xl flex items-center justify-center mb-6 text-accent">
                   <Bell className="w-7 h-7" />
                 </div>
-                <h3 className="text-xl font-bold font-display mb-3">Smart Reminders</h3>
+                <h3 className="text-xl font-bold font-display mb-3">Smarta påminnelser</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  Set reminders based on date or mileage. We'll notify you when it's time for routine maintenance.
+                  Ställ in påminnelser baserat på datum eller körsträcka. Vi meddelar dig när det är dags för rutinunderhåll.
                 </p>
               </div>
 
@@ -112,9 +112,9 @@ export default function Landing() {
                 <div className="w-14 h-14 bg-green-100 dark:bg-green-900/30 rounded-2xl flex items-center justify-center mb-6 text-green-600">
                   <ShieldCheck className="w-7 h-7" />
                 </div>
-                <h3 className="text-xl font-bold font-display mb-3">Multiple Vehicles</h3>
+                <h3 className="text-xl font-bold font-display mb-3">Flera bilar</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  Manage your entire garage from one account. Perfect for families, enthusiasts, and small fleets.
+                  Hantera hela ditt garage från ett konto. Perfekt för familjer, entusiaster och små flottörer.
                 </p>
               </div>
             </div>
@@ -130,7 +130,7 @@ export default function Landing() {
             <span className="font-display font-bold">CarLog</span>
           </div>
           <p className="text-sm text-muted-foreground text-center md:text-right">
-            © {new Date().getFullYear()} Car Service Log. Built for car enthusiasts.
+            © {new Date().getFullYear()} Car Service Log. Byggt för bilentusiaster.
           </p>
         </div>
       </footer>

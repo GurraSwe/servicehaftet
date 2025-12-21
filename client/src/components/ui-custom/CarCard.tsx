@@ -2,6 +2,7 @@ import { Car, ChevronRight, Gauge, Calendar } from "lucide-react";
 import { Link } from "wouter";
 import { type Vehicle } from "@shared/schema";
 import { format } from "date-fns";
+import { sv as svSE } from "date-fns/locale";
 
 interface CarCardProps {
   vehicle: Vehicle;
@@ -34,7 +35,7 @@ export function CarCard({ vehicle }: CarCardProps) {
           <div className="grid grid-cols-2 gap-4 mt-6">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Gauge size={16} className="text-primary" />
-              <span>{vehicle.currentMileage?.toLocaleString()} miles</span>
+              <span>{vehicle.currentMileage?.toLocaleString('sv-SE')} km</span>
             </div>
             {vehicle.licensePlate && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -45,7 +46,7 @@ export function CarCard({ vehicle }: CarCardProps) {
             )}
             <div className="col-span-2 flex items-center gap-2 text-xs text-muted-foreground mt-2 border-t border-border pt-4">
               <Calendar size={14} />
-              <span>Added {format(new Date(vehicle.createdAt || new Date()), "MMM d, yyyy")}</span>
+              <span>Tillagd {format(new Date(vehicle.createdAt || new Date()), "PPP", { locale: svSE })}</span>
             </div>
           </div>
         </div>
