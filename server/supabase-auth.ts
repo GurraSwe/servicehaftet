@@ -1,5 +1,8 @@
 import type { Request, Response, NextFunction, Express, RequestHandler } from "express";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { db } from "./db";
+import { users } from "@shared/schema";
+import { eq } from "drizzle-orm";
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
@@ -25,6 +28,16 @@ declare global {
   }
 }
 
+async function ensureUserExists(userId: string, email: string | undefined): Promise<void> {
+  const [existingUser] = await db.select().from(users).where(eq(users.id, userId));
+  if (!existingUser) {
+    await db.insert(users).values({
+      id: userId,
+      email: email || null,
+    });
+  }
+}
+
 export const isAuthenticated: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
   
@@ -41,6 +54,8 @@ export const isAuthenticated: RequestHandler = async (req: Request, res: Respons
     if (error || !user) {
       return res.status(401).json({ message: "Unauthorized" });
     }
+
+    await ensureUserExists(user.id, user.email);
 
     req.userId = user.id;
     req.userEmail = user.email;
