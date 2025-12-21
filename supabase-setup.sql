@@ -1,8 +1,9 @@
 -- Run this SQL in your Supabase SQL Editor (Dashboard > SQL Editor)
 -- This creates tables with Row Level Security enabled
+-- All data is protected - users can only access their own data
 
--- Vehicles table
-CREATE TABLE IF NOT EXISTS vehicles (
+-- Cars table (bilar)
+CREATE TABLE IF NOT EXISTS cars (
   id SERIAL PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
@@ -18,112 +19,108 @@ CREATE TABLE IF NOT EXISTS vehicles (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Services table
-CREATE TABLE IF NOT EXISTS services (
+-- Service logs table (serviceloggar)
+CREATE TABLE IF NOT EXISTS service_logs (
   id SERIAL PRIMARY KEY,
-  vehicle_id INTEGER NOT NULL REFERENCES vehicles(id) ON DELETE CASCADE,
+  car_id INTEGER NOT NULL REFERENCES cars(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   date TIMESTAMPTZ NOT NULL,
   mileage INTEGER NOT NULL,
-  type TEXT NOT NULL,
-  cost INTEGER,
+  total_cost INTEGER DEFAULT 0,
   notes TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Reminders table
+-- Service items table (serviceposter - enskilda arbeten i en service)
+CREATE TABLE IF NOT EXISTS service_items (
+  id SERIAL PRIMARY KEY,
+  service_log_id INTEGER NOT NULL REFERENCES service_logs(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  type TEXT NOT NULL,
+  description TEXT,
+  cost INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Reminders table (påminnelser)
 CREATE TABLE IF NOT EXISTS reminders (
   id SERIAL PRIMARY KEY,
-  vehicle_id INTEGER NOT NULL REFERENCES vehicles(id) ON DELETE CASCADE,
+  car_id INTEGER NOT NULL REFERENCES cars(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   type TEXT NOT NULL,
   due_date TIMESTAMPTZ,
   due_mileage INTEGER,
   recurring BOOLEAN DEFAULT FALSE,
   interval_months INTEGER,
-  interval_miles INTEGER,
+  interval_kilometers INTEGER,
   is_completed BOOLEAN DEFAULT FALSE,
+  notes TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Enable Row Level Security on all tables
-ALTER TABLE vehicles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE services ENABLE ROW LEVEL SECURITY;
+ALTER TABLE cars ENABLE ROW LEVEL SECURITY;
+ALTER TABLE service_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE service_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reminders ENABLE ROW LEVEL SECURITY;
 
--- RLS Policies for vehicles
--- Users can only see their own vehicles
-CREATE POLICY "Users can view own vehicles" ON vehicles
+-- RLS Policies for cars
+CREATE POLICY "Users can view own cars" ON cars
   FOR SELECT USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can insert own vehicles" ON vehicles
+CREATE POLICY "Users can insert own cars" ON cars
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can update own vehicles" ON vehicles
+CREATE POLICY "Users can update own cars" ON cars
   FOR UPDATE USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can delete own vehicles" ON vehicles
+CREATE POLICY "Users can delete own cars" ON cars
   FOR DELETE USING (auth.uid() = user_id);
 
--- RLS Policies for services
--- Users can only access services for their own vehicles
-CREATE POLICY "Users can view services for own vehicles" ON services
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM vehicles WHERE vehicles.id = services.vehicle_id AND vehicles.user_id = auth.uid()
-    )
-  );
+-- RLS Policies for service_logs
+CREATE POLICY "Users can view own service_logs" ON service_logs
+  FOR SELECT USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can insert services for own vehicles" ON services
-  FOR INSERT WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM vehicles WHERE vehicles.id = services.vehicle_id AND vehicles.user_id = auth.uid()
-    )
-  );
+CREATE POLICY "Users can insert own service_logs" ON service_logs
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can update services for own vehicles" ON services
-  FOR UPDATE USING (
-    EXISTS (
-      SELECT 1 FROM vehicles WHERE vehicles.id = services.vehicle_id AND vehicles.user_id = auth.uid()
-    )
-  );
+CREATE POLICY "Users can update own service_logs" ON service_logs
+  FOR UPDATE USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can delete services for own vehicles" ON services
-  FOR DELETE USING (
-    EXISTS (
-      SELECT 1 FROM vehicles WHERE vehicles.id = services.vehicle_id AND vehicles.user_id = auth.uid()
-    )
-  );
+CREATE POLICY "Users can delete own service_logs" ON service_logs
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- RLS Policies for service_items
+CREATE POLICY "Users can view own service_items" ON service_items
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own service_items" ON service_items
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own service_items" ON service_items
+  FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own service_items" ON service_items
+  FOR DELETE USING (auth.uid() = user_id);
 
 -- RLS Policies for reminders
--- Users can only access reminders for their own vehicles
-CREATE POLICY "Users can view reminders for own vehicles" ON reminders
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM vehicles WHERE vehicles.id = reminders.vehicle_id AND vehicles.user_id = auth.uid()
-    )
-  );
+CREATE POLICY "Users can view own reminders" ON reminders
+  FOR SELECT USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can insert reminders for own vehicles" ON reminders
-  FOR INSERT WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM vehicles WHERE vehicles.id = reminders.vehicle_id AND vehicles.user_id = auth.uid()
-    )
-  );
+CREATE POLICY "Users can insert own reminders" ON reminders
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can update reminders for own vehicles" ON reminders
-  FOR UPDATE USING (
-    EXISTS (
-      SELECT 1 FROM vehicles WHERE vehicles.id = reminders.vehicle_id AND vehicles.user_id = auth.uid()
-    )
-  );
+CREATE POLICY "Users can update own reminders" ON reminders
+  FOR UPDATE USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can delete reminders for own vehicles" ON reminders
-  FOR DELETE USING (
-    EXISTS (
-      SELECT 1 FROM vehicles WHERE vehicles.id = reminders.vehicle_id AND vehicles.user_id = auth.uid()
-    )
-  );
+CREATE POLICY "Users can delete own reminders" ON reminders
+  FOR DELETE USING (auth.uid() = user_id);
 
 -- Create indexes for better performance
-CREATE INDEX IF NOT EXISTS idx_vehicles_user_id ON vehicles(user_id);
-CREATE INDEX IF NOT EXISTS idx_services_vehicle_id ON services(vehicle_id);
-CREATE INDEX IF NOT EXISTS idx_reminders_vehicle_id ON reminders(vehicle_id);
+CREATE INDEX IF NOT EXISTS idx_cars_user_id ON cars(user_id);
+CREATE INDEX IF NOT EXISTS idx_service_logs_car_id ON service_logs(car_id);
+CREATE INDEX IF NOT EXISTS idx_service_logs_user_id ON service_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_service_items_service_log_id ON service_items(service_log_id);
+CREATE INDEX IF NOT EXISTS idx_service_items_user_id ON service_items(user_id);
+CREATE INDEX IF NOT EXISTS idx_reminders_car_id ON reminders(car_id);
+CREATE INDEX IF NOT EXISTS idx_reminders_user_id ON reminders(user_id);
