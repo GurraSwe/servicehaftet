@@ -229,7 +229,7 @@ export function AddServiceDialog({ vehicleId, currentMileage }: AddServiceDialog
                 </Button>
               </div>
 
-              <div className="space-y-3 bg-muted/30 p-4 rounded-lg">
+              <div className="space-y-3 bg-muted/30 p-4 rounded-lg max-h-[40vh] overflow-y-auto">
                 {fields.map((field, index) => (
                   <div key={field.id} className="space-y-2 p-3 bg-background rounded border">
                     <div className="flex justify-between items-center">
