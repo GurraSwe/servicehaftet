@@ -41,7 +41,7 @@ export default function Dashboard() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
             <h2 className="text-3xl font-display font-bold tracking-tight">Dina bilar</h2>
-            <p className="text-muted-foreground mt-1">Hantera dina servicear och underhåll</p>
+            <p className="text-muted-foreground mt-1">Hantera dina bilar, service och underhåll på ett ställe.</p>
           </div>
           <div className="flex items-center gap-2">
             <div className="border border-border rounded-lg p-1 flex items-center gap-1 mr-2 bg-card">
@@ -90,9 +90,9 @@ function EmptyState() {
       <div className="w-20 h-20 bg-muted/50 rounded-full flex items-center justify-center mb-6">
         <LayoutGrid className="w-10 h-10 text-muted-foreground" />
       </div>
-      <h3 className="text-xl font-bold font-display mb-2">Ingen bilar ännu</h3>
+      <h3 className="text-xl font-bold font-display mb-2">Inga bilar ännu</h3>
       <p className="text-muted-foreground max-w-sm mb-8">
-        Lägg till din första bil för att börja spåra underhållshistorik och påminnelser.
+        Lägg till din första bil för att börja spara servicehistorik och få påminnelser om underhåll.
       </p>
       <AddVehicleDialog />
     </div>
