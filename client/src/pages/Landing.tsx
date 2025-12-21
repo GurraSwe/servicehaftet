@@ -66,7 +66,7 @@ export default function Landing() {
                   size="lg" 
                   className="text-lg h-14 px-8 rounded-xl shadow-xl shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-1 transition-all duration-300"
                 >
-                  Börja spåra kostnadsfritt <ChevronRight className="ml-2 w-5 h-5" />
+                  Se hur de fungerar <ChevronRight className="ml-2 w-5 h-5" />
                 </Button>
                 <Button 
                   variant="outline" 
