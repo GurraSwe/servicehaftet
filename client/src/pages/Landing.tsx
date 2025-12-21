@@ -113,7 +113,7 @@ export default function Landing() {
                 </div>
                 <h3 className="text-xl font-bold font-display mb-3">Flera bilar</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  Hantera hela ditt garage från ett konto. Perfekt för familjer, entusiaster och små flottörer.
+                  Hantera hela ditt garage i ett konto. Perfekt för familjer, entusiaster och små vagnparker.
                 </p>
               </div>
             </div>
