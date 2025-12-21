@@ -1,0 +1,75 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api, buildUrl } from "@shared/routes";
+import { z } from "zod";
+
+type ServiceInput = z.infer<typeof api.services.create.input>;
+
+export function useServices(vehicleId: number) {
+  return useQuery({
+    queryKey: [api.services.list.path, vehicleId],
+    queryFn: async () => {
+      if (!vehicleId) return [];
+      const url = buildUrl(api.services.list.path, { vehicleId });
+      const res = await fetch(url, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch services");
+      return api.services.list.responses[200].parse(await res.json());
+    },
+    enabled: !!vehicleId,
+  });
+}
+
+export function useCreateService() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ vehicleId, ...data }: { vehicleId: number } & ServiceInput) => {
+      const payload = {
+        ...data,
+        mileage: Number(data.mileage),
+        cost: data.cost ? Number(data.cost) : undefined,
+        // Ensure date is a string for JSON serialization, but compatible with schema
+        date: new Date(data.date).toISOString() 
+      };
+
+      const url = buildUrl(api.services.create.path, { vehicleId });
+      const res = await fetch(url, {
+        method: api.services.create.method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        if (res.status === 400) {
+           const errorData = await res.json();
+           console.error("Validation error:", errorData);
+           throw new Error(errorData.message || "Validation failed");
+        }
+        throw new Error("Failed to log service");
+      }
+      return api.services.create.responses[201].parse(await res.json());
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: [api.services.list.path, variables.vehicleId] });
+      // Also invalidate vehicle to update current mileage if this service had higher mileage
+      queryClient.invalidateQueries({ queryKey: [api.vehicles.get.path, variables.vehicleId] });
+      queryClient.invalidateQueries({ queryKey: [api.vehicles.list.path] });
+    },
+  });
+}
+
+export function useDeleteService() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, vehicleId }: { id: number, vehicleId: number }) => {
+      const url = buildUrl(api.services.delete.path, { id });
+      const res = await fetch(url, { 
+        method: api.services.delete.method,
+        credentials: "include" 
+      });
+      if (!res.ok) throw new Error("Failed to delete service log");
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: [api.services.list.path, variables.vehicleId] });
+    },
+  });
+}
