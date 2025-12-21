@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChevronLeft, Calendar, Gauge, Settings, PenTool, AlertTriangle } from "lucide-react";
 import { AddServiceDialog } from "@/components/ui-custom/AddServiceDialog";
+import { EditVehicleDialog } from "@/components/ui-custom/EditVehicleDialog";
 import { ServiceItem } from "@/components/ui-custom/ServiceItem";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -55,9 +56,7 @@ export default function VehicleDetails() {
             </div>
             
             <div className="flex gap-3">
-              <Button variant="outline" size="sm" className="hidden sm:flex">
-                <Settings className="w-4 h-4 mr-2" /> Redigera bil
-              </Button>
+              <EditVehicleDialog vehicle={vehicle} />
               <AddServiceDialog vehicleId={vehicleId} currentMileage={vehicle.currentMileage || 0} />
             </div>
           </div>
