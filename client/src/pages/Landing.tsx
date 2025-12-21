@@ -57,8 +57,7 @@ export default function Landing() {
                 Ditt digitala <span className="text-gradient">servicehäfte</span>
               </h1>
               <p className="text-xl text-muted-foreground mb-10 leading-relaxed max-w-2xl mx-auto">
-                Spåra underhåll, övervaka körsträcka och få servicepaddelningar. 
-                Håll din bil frisk och din historia organiserad på ett ställe.
+                Följ bilens underhåll och körsträcka, och få automatiska servicepåminnelser. All servicehistorik samlad – enkelt och smidigt
               </p>
               
               <div className="flex flex-col sm:flex-row justify-center gap-4">
