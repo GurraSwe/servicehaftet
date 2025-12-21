@@ -1,8 +1,9 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertVehicleSchema, Vehicle } from "@shared/schema";
-import { useUpdateVehicle } from "@/hooks/use-vehicles";
+import { useUpdateVehicle, useDeleteVehicle } from "@/hooks/use-vehicles";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 import { z } from "zod";
 
 import {
@@ -25,7 +26,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Settings } from "lucide-react";
+import { Settings, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 const formSchema = insertVehicleSchema.extend({
@@ -42,7 +43,9 @@ interface EditVehicleDialogProps {
 export function EditVehicleDialog({ vehicle }: EditVehicleDialogProps) {
   const [open, setOpen] = useState(false);
   const { mutate: updateVehicle, isPending } = useUpdateVehicle();
+  const { mutate: deleteVehicle, isPending: isDeleting } = useDeleteVehicle();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -72,6 +75,25 @@ export function EditVehicleDialog({ vehicle }: EditVehicleDialogProps) {
         });
       },
     });
+  };
+
+  const handleDelete = () => {
+    if (window.confirm(`Är du säker på att du vill ta bort ${vehicle.name || `${vehicle.year} ${vehicle.make} ${vehicle.model}`}? Den här åtgärden kan inte ångras.`)) {
+      deleteVehicle(vehicle.id, {
+        onSuccess: () => {
+          toast({ title: "Bil borttagen framgångsrikt!" });
+          setOpen(false);
+          setLocation("/dashboard");
+        },
+        onError: (error) => {
+          toast({ 
+            title: "Det gick inte att ta bort bil", 
+            description: error.message,
+            variant: "destructive" 
+          });
+        },
+      });
+    }
   };
 
   return (
@@ -211,11 +233,23 @@ export function EditVehicleDialog({ vehicle }: EditVehicleDialogProps) {
               )}
             />
 
-            <DialogFooter className="pt-4">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>Avbryt</Button>
-              <Button type="submit" disabled={isPending}>
-                {isPending ? "Uppdaterar..." : "Uppdatera bil"}
+            <DialogFooter className="pt-4 flex justify-between">
+              <Button 
+                type="button" 
+                variant="destructive" 
+                onClick={handleDelete}
+                disabled={isDeleting}
+                data-testid="button-delete-vehicle"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                {isDeleting ? "Tar bort..." : "Ta bort bil"}
               </Button>
+              <div className="flex gap-2">
+                <Button type="button" variant="outline" onClick={() => setOpen(false)}>Avbryt</Button>
+                <Button type="submit" disabled={isPending}>
+                  {isPending ? "Uppdaterar..." : "Uppdatera bil"}
+                </Button>
+              </div>
             </DialogFooter>
           </form>
         </Form>
