@@ -64,7 +64,7 @@ export default function VehicleDetails() {
       </div>
 
       <div className="container mt-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Nuvarande körsträcka</CardTitle>
@@ -102,6 +102,29 @@ export default function VehicleDetails() {
                 </div>
               ) : (
                 <div className="text-muted-foreground italic">Ingen service registrerad ännu</div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Serviceintervall</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {vehicle.serviceIntervalMonths || vehicle.serviceIntervalKilometers ? (
+                <div className="text-lg font-bold">
+                  {vehicle.serviceIntervalMonths && vehicle.serviceIntervalKilometers ? (
+                    <>
+                      {vehicle.serviceIntervalMonths} mån / {vehicle.serviceIntervalKilometers.toLocaleString('sv-SE')} km
+                    </>
+                  ) : vehicle.serviceIntervalMonths ? (
+                    <>{vehicle.serviceIntervalMonths} månader</>
+                  ) : (
+                    <>{vehicle.serviceIntervalKilometers?.toLocaleString('sv-SE')} km</>
+                  )}
+                </div>
+              ) : (
+                <div className="text-muted-foreground italic">Ej inställt</div>
               )}
             </CardContent>
           </Card>
