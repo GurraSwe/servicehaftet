@@ -223,7 +223,7 @@ export function AddServiceDialog({ vehicleId, currentMileage }: AddServiceDialog
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => append({ type: "Motorolja", cost: 0, notes: "" })}
+                  onClick={() => append({ type: "Motorolja", cost: 0, notes: "" }, { shouldFocus: false })}
                 >
                   <Plus className="w-4 h-4 mr-1" /> Lägg till åtgärd
                 </Button>
