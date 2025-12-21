@@ -153,7 +153,7 @@ export function AddServiceDialog({ vehicleId, currentMileage }: AddServiceDialog
         <DialogHeader>
           <DialogTitle>Logga service</DialogTitle>
           <DialogDescription>
-            Registrera underhållsdetaljer för din historia. Du kan lägga till flera servicetyper i samma logg.
+            Registrera service- och underhållsarbete för bilen. Du kan lägga till flera åtgärder i samma servicepost.
           </DialogDescription>
         </DialogHeader>
 
@@ -218,14 +218,14 @@ export function AddServiceDialog({ vehicleId, currentMileage }: AddServiceDialog
 
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <FormLabel>Servicetyper</FormLabel>
+                <FormLabel>Serviceåtgärder</FormLabel>
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => append({ type: "Motorolja", cost: 0, notes: "" })}
                 >
-                  <Plus className="w-4 h-4 mr-1" /> Lägg till serviceart
+                  <Plus className="w-4 h-4 mr-1" /> Lägg till åtgärd
                 </Button>
               </div>
 
@@ -233,7 +233,7 @@ export function AddServiceDialog({ vehicleId, currentMileage }: AddServiceDialog
                 {fields.map((field, index) => (
                   <div key={field.id} className="space-y-2 p-3 bg-background rounded border">
                     <div className="flex justify-between items-center">
-                      <FormLabel className="text-sm">Service {index + 1}</FormLabel>
+                      <FormLabel className="text-sm">Åtgärd {index + 1}</FormLabel>
                       {fields.length > 1 && (
                         <Button
                           type="button"
@@ -251,10 +251,11 @@ export function AddServiceDialog({ vehicleId, currentMileage }: AddServiceDialog
                       name={`items.${index}.type`}
                       render={({ field }) => (
                         <FormItem>
+                          <FormLabel className="text-sm">Typ av åtgärd</FormLabel>
                           <Select value={field.value} onValueChange={field.onChange}>
                             <FormControl>
                               <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Välj serviceart" />
+                                <SelectValue placeholder="Välj åtgärd" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -298,7 +299,7 @@ export function AddServiceDialog({ vehicleId, currentMileage }: AddServiceDialog
                           <FormLabel className="text-xs">Anteckningar</FormLabel>
                           <FormControl>
                             <Textarea 
-                              placeholder="Detaljer..." 
+                              placeholder="Detaljer om utfört arbete…" 
                               className="resize-none h-12 text-xs" 
                               {...field} 
                               value={field.value || ''}
@@ -317,7 +318,7 @@ export function AddServiceDialog({ vehicleId, currentMileage }: AddServiceDialog
             <DialogFooter className="pt-4">
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>Avbryt</Button>
               <Button type="submit" disabled={isPending}>
-                {isPending ? "Sparar..." : "Spara register"}
+                {isPending ? "Sparar..." : "Spara service"}
               </Button>
             </DialogFooter>
           </form>
