@@ -1,9 +1,26 @@
-import type { Express } from "express";
+import type { Express, Response } from "express";
 import type { Server } from "http";
-import { supabaseStorage } from "./supabase-storage";
+import { supabaseStorage, NotFoundError, ForbiddenError } from "./supabase-storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
 import { isAuthenticated, registerAuthRoutes } from "./supabase-auth";
+
+function handleStorageError(err: unknown, res: Response) {
+  if (err instanceof NotFoundError) {
+    return res.status(404).json({ message: err.message });
+  }
+  if (err instanceof ForbiddenError) {
+    return res.status(403).json({ message: err.message });
+  }
+  if (err instanceof z.ZodError) {
+    return res.status(400).json({
+      message: err.errors[0].message,
+      field: err.errors[0].path.join('.'),
+    });
+  }
+  console.error("Storage error:", err);
+  return res.status(500).json({ message: "Internal server error" });
+}
 
 export async function registerRoutes(
   httpServer: Server,
@@ -19,8 +36,7 @@ export async function registerRoutes(
       const vehicles = await supabaseStorage.getVehicles(accessToken, userId);
       res.json(vehicles);
     } catch (err) {
-      console.error("Error fetching vehicles:", err);
-      res.status(500).json({ message: "Failed to fetch vehicles" });
+      handleStorageError(err, res);
     }
   });
 
@@ -36,8 +52,7 @@ export async function registerRoutes(
 
       res.json(vehicle);
     } catch (err) {
-      console.error("Error fetching vehicle:", err);
-      res.status(500).json({ message: "Failed to fetch vehicle" });
+      handleStorageError(err, res);
     }
   });
 
@@ -49,14 +64,7 @@ export async function registerRoutes(
       const vehicle = await supabaseStorage.createVehicle(accessToken, { ...input, userId });
       res.status(201).json(vehicle);
     } catch (err) {
-      if (err instanceof z.ZodError) {
-        return res.status(400).json({
-          message: err.errors[0].message,
-          field: err.errors[0].path.join('.'),
-        });
-      }
-      console.error("Error creating vehicle:", err);
-      res.status(500).json({ message: "Failed to create vehicle" });
+      handleStorageError(err, res);
     }
   });
 
@@ -68,14 +76,7 @@ export async function registerRoutes(
       const updated = await supabaseStorage.updateVehicle(accessToken, id, input);
       res.json(updated);
     } catch (err) {
-      if (err instanceof z.ZodError) {
-        return res.status(400).json({
-          message: err.errors[0].message,
-          field: err.errors[0].path.join('.'),
-        });
-      }
-      console.error("Error updating vehicle:", err);
-      res.status(500).json({ message: "Failed to update vehicle" });
+      handleStorageError(err, res);
     }
   });
 
@@ -86,8 +87,7 @@ export async function registerRoutes(
       await supabaseStorage.deleteVehicle(accessToken, id);
       res.status(204).send();
     } catch (err) {
-      console.error("Error deleting vehicle:", err);
-      res.status(500).json({ message: "Failed to delete vehicle" });
+      handleStorageError(err, res);
     }
   });
 
@@ -99,8 +99,7 @@ export async function registerRoutes(
       const services = await supabaseStorage.getServices(accessToken, vehicleId);
       res.json(services);
     } catch (err) {
-      console.error("Error fetching services:", err);
-      res.status(500).json({ message: "Failed to fetch services" });
+      handleStorageError(err, res);
     }
   });
 
@@ -120,14 +119,7 @@ export async function registerRoutes(
 
       res.status(201).json(service);
     } catch (err) {
-      if (err instanceof z.ZodError) {
-        return res.status(400).json({
-          message: err.errors[0].message,
-          field: err.errors[0].path.join('.'),
-        });
-      }
-      console.error("Error creating service:", err);
-      res.status(500).json({ message: "Failed to create service" });
+      handleStorageError(err, res);
     }
   });
 
@@ -138,8 +130,7 @@ export async function registerRoutes(
       await supabaseStorage.deleteService(accessToken, id);
       res.status(204).send();
     } catch (err) {
-      console.error("Error deleting service:", err);
-      res.status(500).json({ message: "Failed to delete service" });
+      handleStorageError(err, res);
     }
   });
 
@@ -151,8 +142,7 @@ export async function registerRoutes(
       const reminders = await supabaseStorage.getReminders(accessToken, vehicleId);
       res.json(reminders);
     } catch (err) {
-      console.error("Error fetching reminders:", err);
-      res.status(500).json({ message: "Failed to fetch reminders" });
+      handleStorageError(err, res);
     }
   });
 
@@ -168,14 +158,7 @@ export async function registerRoutes(
       const reminder = await supabaseStorage.createReminder(accessToken, { ...input, vehicleId });
       res.status(201).json(reminder);
     } catch (err) {
-      if (err instanceof z.ZodError) {
-        return res.status(400).json({
-          message: err.errors[0].message,
-          field: err.errors[0].path.join('.'),
-        });
-      }
-      console.error("Error creating reminder:", err);
-      res.status(500).json({ message: "Failed to create reminder" });
+      handleStorageError(err, res);
     }
   });
 
@@ -191,14 +174,7 @@ export async function registerRoutes(
       const updated = await supabaseStorage.updateReminder(accessToken, id, input);
       res.json(updated);
     } catch (err) {
-      if (err instanceof z.ZodError) {
-        return res.status(400).json({
-          message: err.errors[0].message,
-          field: err.errors[0].path.join('.'),
-        });
-      }
-      console.error("Error updating reminder:", err);
-      res.status(500).json({ message: "Failed to update reminder" });
+      handleStorageError(err, res);
     }
   });
 
@@ -209,8 +185,7 @@ export async function registerRoutes(
       await supabaseStorage.deleteReminder(accessToken, id);
       res.status(204).send();
     } catch (err) {
-      console.error("Error deleting reminder:", err);
-      res.status(500).json({ message: "Failed to delete reminder" });
+      handleStorageError(err, res);
     }
   });
 

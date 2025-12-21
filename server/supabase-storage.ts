@@ -1,8 +1,32 @@
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient, PostgrestError } from "@supabase/supabase-js";
 import type { Vehicle, InsertVehicle, Service, InsertService, Reminder, InsertReminder } from "@shared/schema";
 
 const supabaseUrl = process.env.SUPABASE_URL!;
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY!;
+
+export class NotFoundError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "NotFoundError";
+  }
+}
+
+export class ForbiddenError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ForbiddenError";
+  }
+}
+
+function handleSupabaseError(error: PostgrestError): never {
+  if (error.code === "PGRST116") {
+    throw new NotFoundError("Resource not found");
+  }
+  if (error.code === "42501" || error.message?.includes("permission denied")) {
+    throw new ForbiddenError("Access denied");
+  }
+  throw new Error(error.message);
+}
 
 function createAuthenticatedClient(accessToken: string): SupabaseClient {
   return createClient(supabaseUrl, supabaseAnonKey, {
@@ -39,7 +63,7 @@ export class SupabaseStorage implements ISupabaseStorage {
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (error) throw new Error(error.message);
+    if (error) handleSupabaseError(error);
     return this.mapVehicles(data || []);
   }
 
@@ -53,7 +77,7 @@ export class SupabaseStorage implements ISupabaseStorage {
 
     if (error) {
       if (error.code === "PGRST116") return undefined;
-      throw new Error(error.message);
+      handleSupabaseError(error);
     }
     return this.mapVehicle(data);
   }
@@ -78,7 +102,7 @@ export class SupabaseStorage implements ISupabaseStorage {
       .select()
       .single();
 
-    if (error) throw new Error(error.message);
+    if (error) handleSupabaseError(error);
     return this.mapVehicle(data);
   }
 
@@ -104,14 +128,14 @@ export class SupabaseStorage implements ISupabaseStorage {
       .select()
       .single();
 
-    if (error) throw new Error(error.message);
+    if (error) handleSupabaseError(error);
     return this.mapVehicle(data);
   }
 
   async deleteVehicle(accessToken: string, id: number): Promise<void> {
     const client = createAuthenticatedClient(accessToken);
     const { error } = await client.from("vehicles").delete().eq("id", id);
-    if (error) throw new Error(error.message);
+    if (error) handleSupabaseError(error);
   }
 
   async getServices(accessToken: string, vehicleId: number): Promise<Service[]> {
@@ -122,7 +146,7 @@ export class SupabaseStorage implements ISupabaseStorage {
       .eq("vehicle_id", vehicleId)
       .order("date", { ascending: false });
 
-    if (error) throw new Error(error.message);
+    if (error) handleSupabaseError(error);
     return this.mapServices(data || []);
   }
 
@@ -141,14 +165,14 @@ export class SupabaseStorage implements ISupabaseStorage {
       .select()
       .single();
 
-    if (error) throw new Error(error.message);
+    if (error) handleSupabaseError(error);
     return this.mapService(data);
   }
 
   async deleteService(accessToken: string, id: number): Promise<void> {
     const client = createAuthenticatedClient(accessToken);
     const { error } = await client.from("services").delete().eq("id", id);
-    if (error) throw new Error(error.message);
+    if (error) handleSupabaseError(error);
   }
 
   async getReminders(accessToken: string, vehicleId: number): Promise<Reminder[]> {
@@ -159,7 +183,7 @@ export class SupabaseStorage implements ISupabaseStorage {
       .eq("vehicle_id", vehicleId)
       .order("due_date", { ascending: true });
 
-    if (error) throw new Error(error.message);
+    if (error) handleSupabaseError(error);
     return this.mapReminders(data || []);
   }
 
@@ -180,7 +204,7 @@ export class SupabaseStorage implements ISupabaseStorage {
       .select()
       .single();
 
-    if (error) throw new Error(error.message);
+    if (error) handleSupabaseError(error);
     return this.mapReminder(data);
   }
 
@@ -203,14 +227,14 @@ export class SupabaseStorage implements ISupabaseStorage {
       .select()
       .single();
 
-    if (error) throw new Error(error.message);
+    if (error) handleSupabaseError(error);
     return this.mapReminder(data);
   }
 
   async deleteReminder(accessToken: string, id: number): Promise<void> {
     const client = createAuthenticatedClient(accessToken);
     const { error } = await client.from("reminders").delete().eq("id", id);
-    if (error) throw new Error(error.message);
+    if (error) handleSupabaseError(error);
   }
 
   private mapVehicle(row: Record<string, unknown>): Vehicle {
