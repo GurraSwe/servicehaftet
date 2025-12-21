@@ -41,7 +41,7 @@ export default function Dashboard() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
             <h2 className="text-3xl font-display font-bold tracking-tight">Dina bilar</h2>
-            <p className="text-muted-foreground mt-1">Hantera ditt flottas underhåll och historia.</p>
+            <p className="text-muted-foreground mt-1">Hantera dina servicear och underhåll</p>
           </div>
           <div className="flex items-center gap-2">
             <div className="border border-border rounded-lg p-1 flex items-center gap-1 mr-2 bg-card">
