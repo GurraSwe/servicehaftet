@@ -49,7 +49,7 @@ export default function VehicleDetails() {
                 <span className="font-medium">{vehicle.year} {vehicle.make} {vehicle.model}</span>
                 <span className="w-1 h-1 bg-muted-foreground rounded-full" />
                 <span className="bg-muted px-2 py-0.5 rounded text-xs font-mono font-bold border border-border">
-                  {vehicle.licensePlate || "INGEN REGISTRERING"}
+                  {vehicle.licensePlate || "Ingen registrering"}
                 </span>
               </div>
             </div>
@@ -102,7 +102,7 @@ export default function VehicleDetails() {
                   </div>
                 </div>
               ) : (
-                <div className="text-muted-foreground italic">Ingen service ännu</div>
+                <div className="text-muted-foreground italic">Ingen service registrerad ännu</div>
               )}
             </CardContent>
           </Card>
@@ -141,7 +141,7 @@ export default function VehicleDetails() {
               <div className="text-center py-20 bg-card rounded-xl border border-dashed">
                 <PenTool className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
                 <h3 className="font-semibold text-lg">Ingen servicehistorik</h3>
-                <p className="text-muted-foreground mb-6">Logga ditt första underhållsprotokolle.</p>
+                <p className="text-muted-foreground mb-6">Logga din första service eller underhållsåtgärd för bilen.</p>
                 <AddServiceDialog vehicleId={vehicleId} currentMileage={vehicle.currentMileage || 0} />
               </div>
             ) : (
