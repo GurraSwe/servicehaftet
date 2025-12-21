@@ -8,36 +8,23 @@ import { Loader2 } from "lucide-react";
 
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/Landing";
+import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
 import VehicleDetails from "@/pages/VehicleDetails";
 
-function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <Loader2 className="w-10 h-10 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return <Redirect to="/" />;
-  }
-
-  return <Component />;
+function LoadingScreen() {
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-background">
+      <Loader2 className="w-10 h-10 animate-spin text-primary" />
+    </div>
+  );
 }
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <Loader2 className="w-10 h-10 animate-spin text-primary" />
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (
@@ -46,12 +33,16 @@ function Router() {
         {isAuthenticated ? <Redirect to="/dashboard" /> : <Landing />}
       </Route>
       
+      <Route path="/login">
+        {isAuthenticated ? <Redirect to="/dashboard" /> : <Login />}
+      </Route>
+      
       <Route path="/dashboard">
-        <ProtectedRoute component={Dashboard} />
+        {isAuthenticated ? <Dashboard /> : <Redirect to="/" />}
       </Route>
       
       <Route path="/vehicles/:id">
-        <ProtectedRoute component={VehicleDetails} />
+        {isAuthenticated ? <VehicleDetails /> : <Redirect to="/" />}
       </Route>
       
       <Route component={NotFound} />

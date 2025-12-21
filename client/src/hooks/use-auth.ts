@@ -1,47 +1,72 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { User } from "@shared/models/auth";
-
-async function fetchUser(): Promise<User | null> {
-  const response = await fetch("/api/auth/user", {
-    credentials: "include",
-  });
-
-  if (response.status === 401) {
-    return null;
-  }
-
-  if (!response.ok) {
-    throw new Error(`${response.status}: ${response.statusText}`);
-  }
-
-  return response.json();
-}
-
-async function logout(): Promise<void> {
-  window.location.href = "/api/logout";
-}
+import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { getSupabase, getSupabaseSync } from "@/lib/supabase";
+import type { User } from "@supabase/supabase-js";
 
 export function useAuth() {
   const queryClient = useQueryClient();
-  const { data: user, isLoading } = useQuery<User | null>({
-    queryKey: ["/api/auth/user"],
-    queryFn: fetchUser,
-    retry: false,
-    staleTime: 1000 * 60 * 5,
-  });
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const logoutMutation = useMutation({
-    mutationFn: logout,
-    onSuccess: () => {
-      queryClient.setQueryData(["/api/auth/user"], null);
-    },
-  });
+  useEffect(() => {
+    let subscription: { unsubscribe: () => void } | null = null;
+
+    async function initAuth() {
+      try {
+        const supabase = await getSupabase();
+        
+        const { data: { session } } = await supabase.auth.getSession();
+        setUser(session?.user ?? null);
+        
+        const { data: { subscription: sub } } = supabase.auth.onAuthStateChange(
+          async (event, session) => {
+            const prevUser = user;
+            setUser(session?.user ?? null);
+            
+            if (event === "SIGNED_IN" && session?.user) {
+              queryClient.invalidateQueries();
+            }
+            
+            if (event === "SIGNED_OUT") {
+              queryClient.clear();
+            }
+          }
+        );
+        subscription = sub;
+      } catch (error) {
+        console.error("Failed to initialize auth:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    initAuth();
+
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, [queryClient]);
+
+  const logout = async () => {
+    setIsLoggingOut(true);
+    try {
+      const supabase = await getSupabase();
+      await supabase.auth.signOut();
+      setUser(null);
+      queryClient.clear();
+      window.location.href = "/";
+    } catch (error) {
+      console.error("Logout failed:", error);
+      setIsLoggingOut(false);
+    }
+  };
 
   return {
     user,
     isLoading,
     isAuthenticated: !!user,
-    logout: logoutMutation.mutate,
-    isLoggingOut: logoutMutation.isPending,
+    logout,
+    isLoggingOut,
   };
 }
