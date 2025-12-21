@@ -149,7 +149,7 @@ export function AddServiceDialog({ vehicleId, currentMileage }: AddServiceDialog
           <Plus className="w-4 h-4" /> Logga service
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px] overflow-y-auto max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Logga service</DialogTitle>
           <DialogDescription>
@@ -159,7 +159,7 @@ export function AddServiceDialog({ vehicleId, currentMileage }: AddServiceDialog
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="date"
@@ -274,7 +274,7 @@ export function AddServiceDialog({ vehicleId, currentMileage }: AddServiceDialog
                       )}
                     />
 
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <FormField
                         control={form.control}
                         name={`items.${index}.cost`}

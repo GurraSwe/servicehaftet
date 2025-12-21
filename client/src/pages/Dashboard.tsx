@@ -43,8 +43,8 @@ export default function Dashboard() {
             <h2 className="text-3xl font-display font-bold tracking-tight">Dina bilar</h2>
             <p className="text-muted-foreground mt-1">Hantera dina bilar, service och underhåll på ett ställe.</p>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="border border-border rounded-lg p-1 flex items-center gap-1 mr-2 bg-card">
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="border border-border rounded-lg p-1 flex items-center gap-1 bg-card">
               <Button 
                 variant={view === 'grid' ? 'secondary' : 'ghost'} 
                 size="icon" 
@@ -94,7 +94,7 @@ function EmptyState() {
       <p className="text-muted-foreground max-w-sm mb-8">
         Lägg till din första bil för att börja spara servicehistorik och få påminnelser om underhåll.
       </p>
-      <AddVehicleDialog vehicleCount={vehicles?.length || 0} />
+      <AddVehicleDialog vehicleCount={0} />
     </div>
   );
 }

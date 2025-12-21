@@ -131,7 +131,7 @@ export function EditVehicleDialog({ vehicle }: EditVehicleDialogProps) {
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="make"
@@ -160,7 +160,7 @@ export function EditVehicleDialog({ vehicle }: EditVehicleDialogProps) {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="year"
@@ -189,7 +189,7 @@ export function EditVehicleDialog({ vehicle }: EditVehicleDialogProps) {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="licensePlate"
@@ -218,7 +218,7 @@ export function EditVehicleDialog({ vehicle }: EditVehicleDialogProps) {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="serviceIntervalMonths"

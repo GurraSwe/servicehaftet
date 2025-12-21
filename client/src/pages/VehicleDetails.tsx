@@ -55,7 +55,7 @@ export default function VehicleDetails() {
               </div>
             </div>
             
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
               <EditVehicleDialog vehicle={vehicle} />
               <AddServiceDialog vehicleId={vehicleId} currentMileage={vehicle.currentMileage || 0} />
             </div>
