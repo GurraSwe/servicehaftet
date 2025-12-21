@@ -57,7 +57,8 @@ export default function Landing() {
                 Ditt digitala <span className="text-gradient">servicehäfte</span>
               </h1>
               <p className="text-xl text-muted-foreground mb-10 leading-relaxed max-w-2xl mx-auto">
-                Följ bilens underhåll och körsträcka, och få automatiska servicepåminnelser. All servicehistorik samlad – enkelt och smidigt
+                Håll koll på bilens underhåll och körsträcka och få automatiska servicepåminnelser.
+                All servicehistorik samlad på ett och samma ställe – enkelt och smidigt.
               </p>
               
               <div className="flex flex-col sm:flex-row justify-center gap-4">
@@ -66,7 +67,7 @@ export default function Landing() {
                   size="lg" 
                   className="text-lg h-14 px-8 rounded-xl shadow-xl shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-1 transition-all duration-300"
                 >
-                  Se hur de fungerar <ChevronRight className="ml-2 w-5 h-5" />
+                  Börja spåra kostnadsfritt <ChevronRight className="ml-2 w-5 h-5" />
                 </Button>
                 <Button 
                   variant="outline" 
@@ -91,7 +92,8 @@ export default function Landing() {
                 </div>
                 <h3 className="text-xl font-bold font-display mb-3">Fullständig servicehistorik</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  Glöm aldrig ett kvitto eller när du senast bytte olja. Führa en detaljerad logg över varje underhållshändelse.
+                  Glöm aldrig när du senast bytte olja eller vad som har servats.
+                  Spara en tydlig och detaljerad historik över alla service- och underhållstillfällen.
                 </p>
               </div>
 
@@ -102,7 +104,8 @@ export default function Landing() {
                 </div>
                 <h3 className="text-xl font-bold font-display mb-3">Smarta påminnelser</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  Ställ in påminnelser baserat på datum eller körsträcka. Vi meddelar dig när det är dags för rutinunderhåll.
+                  Ställ in påminnelser baserade på datum eller miltal.
+                  Du blir automatiskt påmind när det är dags för nästa service eller underhåll.
                 </p>
               </div>
 
@@ -113,7 +116,8 @@ export default function Landing() {
                 </div>
                 <h3 className="text-xl font-bold font-display mb-3">Flera bilar</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  Hantera hela ditt garage i ett konto. Perfekt för familjer, entusiaster och små vagnparker.
+                  Hantera flera bilar i ett och samma konto.
+                  Perfekt för familjer, entusiaster och dig som har mer än ett fordon.
                 </p>
               </div>
             </div>
@@ -129,7 +133,8 @@ export default function Landing() {
             <span className="font-display font-bold">CarLog</span>
           </div>
           <p className="text-sm text-muted-foreground text-center md:text-right">
-            © {new Date().getFullYear()} Car Service Log. Byggt för bilentusiaster.
+            © 2025 Car Service Log
+            Skapat för bilägare och entusiaster.
           </p>
         </div>
       </footer>
