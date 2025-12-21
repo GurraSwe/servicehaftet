@@ -24,6 +24,7 @@ declare global {
     interface Request {
       userId?: string;
       userEmail?: string;
+      accessToken?: string;
     }
   }
 }
@@ -59,6 +60,7 @@ export const isAuthenticated: RequestHandler = async (req: Request, res: Respons
 
     req.userId = user.id;
     req.userEmail = user.email;
+    req.accessToken = token;
     
     next();
   } catch (error) {
