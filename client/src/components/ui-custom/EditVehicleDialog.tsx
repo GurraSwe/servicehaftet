@@ -103,8 +103,8 @@ export function EditVehicleDialog({ vehicle }: EditVehicleDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="hidden sm:flex" data-testid="button-edit-vehicle">
-          <Settings className="w-4 h-4 mr-2" /> Redigera bil
+        <Button variant="outline" size="sm" data-testid="button-edit-vehicle">
+          <Settings className="w-4 h-4 mr-2" /> Redigera
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px] overflow-y-auto max-h-[90vh]">
