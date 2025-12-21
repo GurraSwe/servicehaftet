@@ -233,24 +233,25 @@ export function EditVehicleDialog({ vehicle }: EditVehicleDialogProps) {
               )}
             />
 
-            <DialogFooter className="pt-4 flex justify-between">
+            <div className="space-y-3 pt-4">
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setOpen(false)}>Avbryt</Button>
+                <Button type="submit" disabled={isPending}>
+                  {isPending ? "Uppdaterar..." : "Uppdatera bil"}
+                </Button>
+              </DialogFooter>
               <Button 
                 type="button" 
                 variant="destructive" 
                 onClick={handleDelete}
                 disabled={isDeleting}
+                className="w-full"
                 data-testid="button-delete-vehicle"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
                 {isDeleting ? "Tar bort..." : "Ta bort bil"}
               </Button>
-              <div className="flex gap-2">
-                <Button type="button" variant="outline" onClick={() => setOpen(false)}>Avbryt</Button>
-                <Button type="submit" disabled={isPending}>
-                  {isPending ? "Uppdaterar..." : "Uppdatera bil"}
-                </Button>
-              </div>
-            </DialogFooter>
+            </div>
           </form>
         </Form>
       </DialogContent>
