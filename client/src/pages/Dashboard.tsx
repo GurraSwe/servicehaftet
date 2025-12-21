@@ -22,7 +22,7 @@ export default function Dashboard() {
         <div className="container flex h-16 items-center justify-between">
           <h1 className="font-display font-bold text-xl flex items-center gap-2">
             <span className="text-primary">Garage</span>
-            <span className="text-muted-foreground text-sm font-normal hidden sm:inline-block">/ {user?.firstName || 'Min'} instrumentpanel</span>
+            <span className="text-muted-foreground text-sm font-normal hidden sm:inline-block">/ Min instrumentpanel</span>
           </h1>
           <div className="flex items-center gap-4">
             <div className="text-sm text-muted-foreground hidden sm:block">
