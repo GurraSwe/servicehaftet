@@ -46,12 +46,10 @@ import { useState } from "react";
 
 const serviceTypes = [
   "Oljebyte",
-  "Däckrotation",
   "Bromservice",
   "Batteribyte",
   "Filterbyte",
   "Inspektion",
-  "Vätsketillsats",
   "Reparation",
   "Övrigt"
 ];
