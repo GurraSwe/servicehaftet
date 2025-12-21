@@ -1,9 +1,9 @@
 import { format } from "date-fns";
 import { sv as svSE } from "date-fns/locale";
-import { type Service } from "@shared/schema";
-import { Wrench, Droplet, Disc, AlertCircle, FileText, Trash2 } from "lucide-react";
+import type { ServiceLog } from "@/lib/types";
+import { Wrench, Droplet, Disc, FileText, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useDeleteService } from "@/hooks/use-services";
+import { useDeleteServiceLog } from "@/hooks/use-service-logs";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -18,24 +18,15 @@ import {
 } from "@/components/ui/alert-dialog";
 
 interface ServiceItemProps {
-  service: Service;
+  service: ServiceLog;
 }
 
-const getIconForType = (type: string) => {
-  const t = type.toLowerCase();
-  if (t.includes("olje")) return <Droplet className="w-5 h-5 text-amber-500" />;
-  if (t.includes("brom")) return <Disc className="w-5 h-5 text-red-500" />;
-  if (t.includes("däck")) return <Disc className="w-5 h-5 text-slate-500" />;
-  if (t.includes("reparation")) return <Wrench className="w-5 h-5 text-blue-500" />;
-  return <Wrench className="w-5 h-5 text-primary" />;
-};
-
 export function ServiceItem({ service }: ServiceItemProps) {
-  const { mutate: deleteService, isPending } = useDeleteService();
+  const { mutate: deleteServiceLog, isPending } = useDeleteServiceLog();
   const { toast } = useToast();
 
   const handleDelete = () => {
-    deleteService({ id: service.id, vehicleId: service.vehicleId }, {
+    deleteServiceLog({ id: service.id, carId: service.car_id }, {
       onSuccess: () => {
         toast({ title: "Serviceregister raderat" });
       },
@@ -49,13 +40,13 @@ export function ServiceItem({ service }: ServiceItemProps) {
     <div className="group flex flex-col sm:flex-row gap-4 p-4 rounded-xl border border-border bg-card/50 hover:bg-card transition-colors">
       <div className="flex-shrink-0 mt-1">
         <div className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center shadow-sm">
-          {getIconForType(service.type)}
+          <Wrench className="w-5 h-5 text-primary" />
         </div>
       </div>
       
       <div className="flex-grow min-w-0">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1">
-          <h4 className="font-semibold text-lg text-foreground truncate">{service.type}</h4>
+          <h4 className="font-semibold text-lg text-foreground truncate">Service</h4>
           <span className="text-sm text-muted-foreground whitespace-nowrap">
             {format(new Date(service.date), "PPP", { locale: svSE })}
           </span>
@@ -65,9 +56,9 @@ export function ServiceItem({ service }: ServiceItemProps) {
           <span className="flex items-center gap-1">
             <span className="font-medium text-foreground">{service.mileage.toLocaleString('sv-SE')}</span> km
           </span>
-          {service.cost && (
+          {service.total_cost > 0 && (
             <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/10 text-green-700 dark:text-green-400 font-medium text-xs">
-              {(service.cost / 100).toLocaleString('sv-SE', { minimumFractionDigits: 2 })} kr
+              {service.total_cost.toLocaleString('sv-SE')} kr
             </span>
           )}
         </div>

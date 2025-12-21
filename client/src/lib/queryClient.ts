@@ -1,9 +1,8 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
-import { getSupabase } from "./supabase";
+import { supabase } from "./supabase";
 
 async function getAuthHeaders(): Promise<HeadersInit> {
   try {
-    const supabase = await getSupabase();
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.access_token) {
       return {

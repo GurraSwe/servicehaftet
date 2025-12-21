@@ -1,32 +1,13 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-let supabaseInstance: SupabaseClient | null = null;
-let supabasePromise: Promise<SupabaseClient> | null = null;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-async function initSupabase(): Promise<SupabaseClient> {
-  const response = await fetch('/api/supabase-config');
-  if (!response.ok) {
-    throw new Error('Failed to fetch Supabase configuration');
-  }
-  const { url, anonKey } = await response.json();
-  return createClient(url, anonKey);
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Missing Supabase environment variables. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY');
 }
 
-export async function getSupabase(): Promise<SupabaseClient> {
-  if (supabaseInstance) {
-    return supabaseInstance;
-  }
-  
-  if (!supabasePromise) {
-    supabasePromise = initSupabase().then((client) => {
-      supabaseInstance = client;
-      return client;
-    });
-  }
-  
-  return supabasePromise;
-}
-
-export function getSupabaseSync(): SupabaseClient | null {
-  return supabaseInstance;
-}
+export const supabase: SupabaseClient = createClient(
+  supabaseUrl || '',
+  supabaseAnonKey || ''
+);

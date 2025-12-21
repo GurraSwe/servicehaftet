@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { getSupabase, getSupabaseSync } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 
 export function useAuth() {
@@ -14,14 +14,11 @@ export function useAuth() {
 
     async function initAuth() {
       try {
-        const supabase = await getSupabase();
-        
         const { data: { session } } = await supabase.auth.getSession();
         setUser(session?.user ?? null);
         
         const { data: { subscription: sub } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
-            const prevUser = user;
             setUser(session?.user ?? null);
             
             if (event === "SIGNED_IN" && session?.user) {
@@ -51,7 +48,6 @@ export function useAuth() {
   const logout = async () => {
     setIsLoggingOut(true);
     try {
-      const supabase = await getSupabase();
       await supabase.auth.signOut();
       setUser(null);
       queryClient.clear();

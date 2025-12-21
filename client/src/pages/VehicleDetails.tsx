@@ -1,6 +1,6 @@
 import { useParams, Link, useLocation } from "wouter";
-import { useVehicle } from "@/hooks/use-vehicles";
-import { useServices } from "@/hooks/use-services";
+import { useCar } from "@/hooks/use-cars";
+import { useServiceLogs } from "@/hooks/use-service-logs";
 import { useReminders } from "@/hooks/use-reminders";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,27 +12,26 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDistanceToNow } from "date-fns";
 import { sv as svSE } from "date-fns/locale";
+import type { ServiceLog } from "@/lib/types";
 
 export default function VehicleDetails() {
   const { id } = useParams<{ id: string }>();
   const vehicleId = Number(id);
   const [location] = useLocation();
   
-  const { data: vehicle, isLoading: vehicleLoading } = useVehicle(vehicleId);
-  const { data: services, isLoading: servicesLoading } = useServices(vehicleId);
+  const { data: vehicle, isLoading: vehicleLoading } = useCar(vehicleId);
+  const { data: serviceLogs, isLoading: servicesLoading } = useServiceLogs(vehicleId);
 
   if (vehicleLoading) return <DetailsSkeleton />;
   if (!vehicle) return <div className="p-8 text-center">Bil hittades inte</div>;
 
-  // Calculate stats
-  const totalSpent = services?.reduce((sum, s) => sum + (s.cost || 0), 0) || 0;
-  const lastService = services && services.length > 0 
-    ? services.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0] 
+  const totalSpent = serviceLogs?.reduce((sum, s) => sum + (s.total_cost || 0), 0) || 0;
+  const lastService = serviceLogs && serviceLogs.length > 0 
+    ? serviceLogs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0] 
     : null;
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      {/* Header */}
       <div className="bg-card border-b border-border">
         <div className="container py-6">
           <Link href="/dashboard">
@@ -50,14 +49,14 @@ export default function VehicleDetails() {
                 <span className="font-medium">{vehicle.year} {vehicle.make} {vehicle.model}</span>
                 <span className="w-1 h-1 bg-muted-foreground rounded-full" />
                 <span className="bg-muted px-2 py-0.5 rounded text-xs font-mono font-bold border border-border">
-                  {vehicle.licensePlate || "Ingen registrering"}
+                  {vehicle.license_plate || "Ingen registrering"}
                 </span>
               </div>
             </div>
             
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
               <EditVehicleDialog vehicle={vehicle} />
-              <AddServiceDialog vehicleId={vehicleId} currentMileage={vehicle.currentMileage || 0} />
+              <AddServiceDialog vehicleId={vehicleId} currentMileage={vehicle.current_mileage || 0} />
             </div>
           </div>
         </div>
@@ -72,7 +71,7 @@ export default function VehicleDetails() {
             <CardContent>
               <div className="text-2xl font-bold flex items-center gap-2">
                 <Gauge className="w-5 h-5 text-primary" />
-                {vehicle.currentMileage?.toLocaleString('sv-SE')} km
+                {vehicle.current_mileage?.toLocaleString('sv-SE')} km
               </div>
             </CardContent>
           </Card>
@@ -83,7 +82,7 @@ export default function VehicleDetails() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {(totalSpent / 100).toLocaleString('sv-SE', { minimumFractionDigits: 2 })} kr
+                {totalSpent.toLocaleString('sv-SE')} kr
               </div>
             </CardContent>
           </Card>
@@ -95,7 +94,7 @@ export default function VehicleDetails() {
             <CardContent>
               {lastService ? (
                 <div>
-                  <div className="text-lg font-bold truncate">{lastService.type}</div>
+                  <div className="text-lg font-bold truncate">Service</div>
                   <div className="text-xs text-muted-foreground mt-1">
                     {formatDistanceToNow(new Date(lastService.date), { addSuffix: true, locale: svSE })}
                   </div>
@@ -111,16 +110,16 @@ export default function VehicleDetails() {
               <CardTitle className="text-sm font-medium text-muted-foreground">Serviceintervall</CardTitle>
             </CardHeader>
             <CardContent>
-              {vehicle.serviceIntervalMonths || vehicle.serviceIntervalKilometers ? (
+              {vehicle.service_interval_months || vehicle.service_interval_kilometers ? (
                 <div className="text-lg font-bold">
-                  {vehicle.serviceIntervalMonths && vehicle.serviceIntervalKilometers ? (
+                  {vehicle.service_interval_months && vehicle.service_interval_kilometers ? (
                     <>
-                      {vehicle.serviceIntervalMonths} mån / {vehicle.serviceIntervalKilometers.toLocaleString('sv-SE')} km
+                      {vehicle.service_interval_months} mån / {vehicle.service_interval_kilometers.toLocaleString('sv-SE')} km
                     </>
-                  ) : vehicle.serviceIntervalMonths ? (
-                    <>{vehicle.serviceIntervalMonths} månader</>
+                  ) : vehicle.service_interval_months ? (
+                    <>{vehicle.service_interval_months} månader</>
                   ) : (
-                    <>{vehicle.serviceIntervalKilometers?.toLocaleString('sv-SE')} km</>
+                    <>{vehicle.service_interval_kilometers?.toLocaleString('sv-SE')} km</>
                   )}
                 </div>
               ) : (
@@ -159,17 +158,17 @@ export default function VehicleDetails() {
                 <Skeleton className="h-24 w-full" />
                 <Skeleton className="h-24 w-full" />
               </div>
-            ) : services?.length === 0 ? (
+            ) : serviceLogs?.length === 0 ? (
               <div className="text-center py-20 bg-card rounded-xl border border-dashed">
                 <PenTool className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
                 <h3 className="font-semibold text-lg">Ingen servicehistorik</h3>
                 <p className="text-muted-foreground mb-6">Logga din första service eller underhållsåtgärd för bilen.</p>
-                <AddServiceDialog vehicleId={vehicleId} currentMileage={vehicle.currentMileage || 0} />
+                <AddServiceDialog vehicleId={vehicleId} currentMileage={vehicle.current_mileage || 0} />
               </div>
             ) : (
-              services?.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                .map((service) => (
-                  <ServiceItem key={service.id} service={service} />
+              serviceLogs?.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                .map((serviceLog: ServiceLog) => (
+                  <ServiceItem key={serviceLog.id} service={serviceLog} />
                 ))
             )}
           </TabsContent>

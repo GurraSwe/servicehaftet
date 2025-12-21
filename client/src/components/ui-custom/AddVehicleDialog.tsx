@@ -1,7 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertVehicleSchema } from "@shared/schema";
-import { useCreateVehicle } from "@/hooks/use-vehicles";
+import { useCreateCar } from "@/hooks/use-cars";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 
@@ -28,11 +27,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Crown } from "lucide-react";
 import { useState } from "react";
 
-const formSchema = insertVehicleSchema.extend({
+const formSchema = z.object({
+  name: z.string().min(1, "Namn krävs"),
+  make: z.string().min(1, "Märke krävs"),
+  model: z.string().min(1, "Modell krävs"),
   year: z.coerce.number().min(1900).max(new Date().getFullYear() + 1),
-  currentMileage: z.coerce.number().min(0),
-  serviceIntervalMonths: z.coerce.number().min(0).optional().nullable(),
-  serviceIntervalKilometers: z.coerce.number().min(0).optional().nullable(),
+  current_mileage: z.coerce.number().min(0),
+  vin: z.string().optional().nullable(),
+  license_plate: z.string().optional().nullable(),
+  service_interval_months: z.coerce.number().min(0).optional().nullable(),
+  service_interval_kilometers: z.coerce.number().min(0).optional().nullable(),
+  notes: z.string().optional().nullable(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -44,7 +49,7 @@ interface AddVehicleDialogProps {
 export function AddVehicleDialog({ vehicleCount = 0 }: AddVehicleDialogProps) {
   const [open, setOpen] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
-  const { mutate: createVehicle, isPending } = useCreateVehicle();
+  const { mutate: createCar, isPending } = useCreateCar();
   const { toast } = useToast();
   
   const hasReachedLimit = vehicleCount >= 1;
@@ -57,16 +62,16 @@ export function AddVehicleDialog({ vehicleCount = 0 }: AddVehicleDialogProps) {
       model: "",
       year: new Date().getFullYear(),
       vin: "",
-      licensePlate: "",
-      currentMileage: 0,
-      serviceIntervalMonths: null,
-      serviceIntervalKilometers: null,
+      license_plate: "",
+      current_mileage: 0,
+      service_interval_months: null,
+      service_interval_kilometers: null,
       notes: "",
     },
   });
 
   const onSubmit = (data: FormValues) => {
-    createVehicle(data, {
+    createCar(data, {
       onSuccess: () => {
         toast({ title: "Bil tillagd framgångsrikt!" });
         setOpen(false);
@@ -156,7 +161,7 @@ export function AddVehicleDialog({ vehicleCount = 0 }: AddVehicleDialogProps) {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Smeknamn (valfritt)</FormLabel>
+                  <FormLabel>Smeknamn</FormLabel>
                   <FormControl>
                     <Input placeholder="t.ex. Min dagliga bil" {...field} value={field.value || ''} />
                   </FormControl>
@@ -210,7 +215,7 @@ export function AddVehicleDialog({ vehicleCount = 0 }: AddVehicleDialogProps) {
               />
               <FormField
                 control={form.control}
-                name="currentMileage"
+                name="current_mileage"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Nuvarande körsträcka (km)</FormLabel>
@@ -226,7 +231,7 @@ export function AddVehicleDialog({ vehicleCount = 0 }: AddVehicleDialogProps) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="licensePlate"
+                name="license_plate"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Registreringsskyllt</FormLabel>
@@ -255,7 +260,7 @@ export function AddVehicleDialog({ vehicleCount = 0 }: AddVehicleDialogProps) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="serviceIntervalMonths"
+                name="service_interval_months"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Serviceintervall (månader)</FormLabel>
@@ -279,7 +284,7 @@ export function AddVehicleDialog({ vehicleCount = 0 }: AddVehicleDialogProps) {
               />
               <FormField
                 control={form.control}
-                name="serviceIntervalKilometers"
+                name="service_interval_kilometers"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Serviceintervall (km)</FormLabel>

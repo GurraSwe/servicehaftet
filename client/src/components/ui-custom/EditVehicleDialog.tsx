@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertVehicleSchema, Vehicle } from "@shared/schema";
-import { useUpdateVehicle, useDeleteVehicle } from "@/hooks/use-vehicles";
+import type { Car } from "@/lib/types";
+import { useUpdateCar, useDeleteCar } from "@/hooks/use-cars";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { z } from "zod";
@@ -29,23 +29,29 @@ import { Textarea } from "@/components/ui/textarea";
 import { Settings, Trash2 } from "lucide-react";
 import { useState } from "react";
 
-const formSchema = insertVehicleSchema.extend({
+const formSchema = z.object({
+  name: z.string().min(1, "Namn krävs"),
+  make: z.string().min(1, "Märke krävs"),
+  model: z.string().min(1, "Modell krävs"),
   year: z.coerce.number().min(1900).max(new Date().getFullYear() + 1),
-  currentMileage: z.coerce.number().min(0),
-  serviceIntervalMonths: z.coerce.number().min(0).optional().nullable(),
-  serviceIntervalKilometers: z.coerce.number().min(0).optional().nullable(),
+  current_mileage: z.coerce.number().min(0),
+  vin: z.string().optional().nullable(),
+  license_plate: z.string().optional().nullable(),
+  service_interval_months: z.coerce.number().min(0).optional().nullable(),
+  service_interval_kilometers: z.coerce.number().min(0).optional().nullable(),
+  notes: z.string().optional().nullable(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
 interface EditVehicleDialogProps {
-  vehicle: Vehicle;
+  vehicle: Car;
 }
 
 export function EditVehicleDialog({ vehicle }: EditVehicleDialogProps) {
   const [open, setOpen] = useState(false);
-  const { mutate: updateVehicle, isPending } = useUpdateVehicle();
-  const { mutate: deleteVehicle, isPending: isDeleting } = useDeleteVehicle();
+  const { mutate: updateCar, isPending } = useUpdateCar();
+  const { mutate: deleteCar, isPending: isDeleting } = useDeleteCar();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
@@ -57,16 +63,16 @@ export function EditVehicleDialog({ vehicle }: EditVehicleDialogProps) {
       model: vehicle.model,
       year: vehicle.year,
       vin: vehicle.vin || "",
-      licensePlate: vehicle.licensePlate || "",
-      currentMileage: vehicle.currentMileage || 0,
-      serviceIntervalMonths: vehicle.serviceIntervalMonths || null,
-      serviceIntervalKilometers: vehicle.serviceIntervalKilometers || null,
+      license_plate: vehicle.license_plate || "",
+      current_mileage: vehicle.current_mileage || 0,
+      service_interval_months: vehicle.service_interval_months || null,
+      service_interval_kilometers: vehicle.service_interval_kilometers || null,
       notes: vehicle.notes || "",
     },
   });
 
   const onSubmit = (data: FormValues) => {
-    updateVehicle({ id: vehicle.id, ...data }, {
+    updateCar({ id: vehicle.id, ...data }, {
       onSuccess: () => {
         toast({ title: "Bil uppdaterad framgångsrikt!" });
         setOpen(false);
@@ -83,7 +89,7 @@ export function EditVehicleDialog({ vehicle }: EditVehicleDialogProps) {
 
   const handleDelete = () => {
     if (window.confirm(`Är du säker på att du vill ta bort ${vehicle.name || `${vehicle.year} ${vehicle.make} ${vehicle.model}`}? Den här åtgärden kan inte ångras.`)) {
-      deleteVehicle(vehicle.id, {
+      deleteCar(vehicle.id, {
         onSuccess: () => {
           toast({ title: "Bil borttagen framgångsrikt!" });
           setOpen(false);
@@ -122,7 +128,7 @@ export function EditVehicleDialog({ vehicle }: EditVehicleDialogProps) {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Smeknamn (valfritt)</FormLabel>
+                  <FormLabel>Smeknamn</FormLabel>
                   <FormControl>
                     <Input placeholder="t.ex. Min dagliga bil" {...field} value={field.value || ''} />
                   </FormControl>
@@ -176,7 +182,7 @@ export function EditVehicleDialog({ vehicle }: EditVehicleDialogProps) {
               />
               <FormField
                 control={form.control}
-                name="currentMileage"
+                name="current_mileage"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Nuvarande körsträcka (km)</FormLabel>
@@ -192,7 +198,7 @@ export function EditVehicleDialog({ vehicle }: EditVehicleDialogProps) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="licensePlate"
+                name="license_plate"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Registreringsskyllt</FormLabel>
@@ -221,7 +227,7 @@ export function EditVehicleDialog({ vehicle }: EditVehicleDialogProps) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="serviceIntervalMonths"
+                name="service_interval_months"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Serviceintervall (månader)</FormLabel>
@@ -245,7 +251,7 @@ export function EditVehicleDialog({ vehicle }: EditVehicleDialogProps) {
               />
               <FormField
                 control={form.control}
-                name="serviceIntervalKilometers"
+                name="service_interval_kilometers"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Serviceintervall (km)</FormLabel>

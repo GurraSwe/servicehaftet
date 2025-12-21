@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { getSupabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 import { queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,8 +23,6 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const supabase = await getSupabase();
-      
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({
           email,

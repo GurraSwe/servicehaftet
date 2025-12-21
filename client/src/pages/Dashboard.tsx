@@ -1,23 +1,22 @@
 import { useAuth } from "@/hooks/use-auth";
-import { useVehicles } from "@/hooks/use-vehicles";
+import { useCars } from "@/hooks/use-cars";
 import { CarCard } from "@/components/ui-custom/CarCard";
 import { AddVehicleDialog } from "@/components/ui-custom/AddVehicleDialog";
 import { Button } from "@/components/ui/button";
 import { LogOut, LayoutGrid, List } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
-import { Vehicle } from "@shared/schema";
+import type { Car } from "@/lib/types";
 
 export default function Dashboard() {
   const { logout, user } = useAuth();
-  const { data: vehicles, isLoading, error } = useVehicles();
+  const { data: cars, isLoading, error } = useCars();
   const [view, setView] = useState<'grid' | 'list'>('grid');
 
   if (isLoading) return <DashboardSkeleton />;
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="sticky top-0 z-40 w-full border-b border-border/50 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
           <h1 className="font-display font-bold text-xl flex items-center gap-2">
@@ -36,7 +35,6 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="container py-8 sm:py-10">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
@@ -62,7 +60,7 @@ export default function Dashboard() {
                 <List className="w-4 h-4" />
               </Button>
             </div>
-            <AddVehicleDialog vehicleCount={vehicles?.length || 0} />
+            <AddVehicleDialog vehicleCount={cars?.length || 0} />
           </div>
         </div>
 
@@ -70,12 +68,12 @@ export default function Dashboard() {
           <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-8 text-center text-destructive">
             <p>Det gick inte att ladda bilar. Försök igen senare.</p>
           </div>
-        ) : vehicles?.length === 0 ? (
+        ) : cars?.length === 0 ? (
           <EmptyState />
         ) : (
           <div className={view === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
-            {vehicles?.map((vehicle: Vehicle) => (
-              <CarCard key={vehicle.id} vehicle={vehicle} />
+            {cars?.map((car: Car) => (
+              <CarCard key={car.id} vehicle={car} />
             ))}
           </div>
         )}
