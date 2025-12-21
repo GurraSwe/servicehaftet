@@ -15,6 +15,8 @@ export const vehicles = pgTable("vehicles", {
   vin: text("vin"),
   licensePlate: text("license_plate"),
   currentMileage: integer("current_mileage").default(0),
+  serviceIntervalMonths: integer("service_interval_months"),
+  serviceIntervalKilometers: integer("service_interval_kilometers"),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
 });
