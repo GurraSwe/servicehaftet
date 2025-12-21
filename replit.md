@@ -1,8 +1,8 @@
-# CarLog - Vehicle Maintenance Tracker
+# ServiceHäftet - Vehicle Maintenance Tracker
 
 ## Overview
 
-CarLog is a vehicle maintenance management application that helps users track their cars, service history, and maintenance reminders. Users can log service records, set recurring reminders for upcoming maintenance, and view spending trends. The application uses Replit Auth for authentication and PostgreSQL for data persistence.
+ServiceHäftet is a vehicle maintenance management application that helps users track their cars, service history, and maintenance reminders. Users can log service records, set recurring reminders for upcoming maintenance, and view spending trends. The application uses Replit Auth for authentication and PostgreSQL for data persistence.
 
 ## User Preferences
 

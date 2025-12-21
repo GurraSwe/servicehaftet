@@ -20,7 +20,7 @@ export default function Landing() {
               <div className="bg-primary rounded-lg p-1.5">
                 <Car className="w-6 h-6 text-primary-foreground" />
               </div>
-              <span className="font-display font-bold text-xl tracking-tight">CarLog</span>
+              <span className="font-display font-bold text-xl tracking-tight">ServiceHäftet</span>
             </div>
             
             <div className="flex items-center gap-4">
@@ -130,10 +130,10 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2 opacity-70">
             <Car className="w-5 h-5" />
-            <span className="font-display font-bold">CarLog</span>
+            <span className="font-display font-bold">ServiceHäftet</span>
           </div>
           <p className="text-sm text-muted-foreground text-center md:text-right">
-            © 2025 Car Service Log
+            © 2025 ServiceHäftet
             Skapat för bilägare och entusiaster.
           </p>
         </div>
