@@ -32,6 +32,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  SelectLabel,
+  SelectGroup,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -44,15 +46,21 @@ import {
 } from "@/components/ui/popover";
 import { useState } from "react";
 
-const serviceTypes = [
-  "Oljebyte",
-  "Bromservice",
-  "Batteribyte",
-  "Filterbyte",
-  "Inspektion",
-  "Reparation",
-  "Övrigt"
-];
+const serviceCategories = {
+  "Oljeservice": ["Motorolja", "Oljefilter"],
+  "Bromsservice": ["Bromsbelägg", "Bromsskivor", "Bromsvätska"],
+  "Filter": ["Luftfilter", "Kupéfilter", "Bränslefilter"],
+  "Tändsystem": ["Tändstift", "Tändspolar"],
+  "Kylsystem": ["Kylvätskebyte", "Termostat", "Vattenpump"],
+  "Chassi & slitdelar": ["Däckbyte (sommar/vinter)", "Däckrotation", "Hjulinställning", "Stötdämpare", "Fjädrar", "Hjullager"],
+  "Drivlina": ["Växellådsolja (manuell / automat)", "Koppling", "Drivaxlar", "Differentialolja"],
+  "El & elektronik": ["Batteribyte", "Generator", "Startmotor", "Lampor", "Säkringar"],
+  "Vätskor & kontroller": ["Servoolja", "Spolarvätska", "AC-service (påfyllning / läcktest)", "Bromsvätskekontroll"],
+  "Service & kontroller": ["Årlig service", "Inspektion", "Besiktning (för- / efterkontroll)", "Diagnos / felkoder (DTC)"],
+  "Kaross & komfort": ["Rostskydd", "Vindruta", "Torkarblad", "Lås & gångjärn (smörjning)"]
+};
+
+const serviceTypes = Object.values(serviceCategories).flat();
 
 const formSchema = insertServiceSchema.omit({ vehicleId: true }).extend({
   mileage: z.coerce.number().min(0),
@@ -75,7 +83,7 @@ export function AddServiceDialog({ vehicleId, currentMileage }: AddServiceDialog
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      type: "Oljebyte",
+      type: "Motorolja",
       date: new Date(),
       mileage: currentMileage || 0,
       cost: 0,
@@ -94,7 +102,7 @@ export function AddServiceDialog({ vehicleId, currentMileage }: AddServiceDialog
         toast({ title: "Service loggad framgångsrikt!" });
         setOpen(false);
         form.reset({
-          type: "Oljebyte",
+          type: "Motorolja",
           date: new Date(),
           mileage: data.mileage,
           cost: 0,
@@ -142,8 +150,13 @@ export function AddServiceDialog({ vehicleId, currentMileage }: AddServiceDialog
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {serviceTypes.map(type => (
-                          <SelectItem key={type} value={type}>{type}</SelectItem>
+                        {Object.entries(serviceCategories).map(([category, types]) => (
+                          <SelectGroup key={category}>
+                            <SelectLabel>{category}</SelectLabel>
+                            {types.map(type => (
+                              <SelectItem key={type} value={type}>{type}</SelectItem>
+                            ))}
+                          </SelectGroup>
                         ))}
                       </SelectContent>
                     </Select>
