@@ -111,6 +111,24 @@ export function useServiceItems(serviceLogId: number) {
   });
 }
 
+async function recalculateServiceLogTotal(serviceLogId: number): Promise<void> {
+  const { data: items, error: fetchError } = await supabase
+    .from("service_items")
+    .select("cost")
+    .eq("service_log_id", serviceLogId);
+  
+  if (fetchError) throw new Error(fetchError.message);
+  
+  const totalCost = (items || []).reduce((sum, item) => sum + (item.cost || 0), 0);
+  
+  const { error: updateError } = await supabase
+    .from("service_logs")
+    .update({ total_cost: totalCost })
+    .eq("id", serviceLogId);
+  
+  if (updateError) throw new Error(updateError.message);
+}
+
 export function useCreateServiceItem() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -129,10 +147,14 @@ export function useCreateServiceItem() {
         .single();
       
       if (error) throw new Error(error.message);
+      
+      await recalculateServiceLogTotal(input.service_log_id);
+      
       return data;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["service-items", variables.service_log_id] });
+      queryClient.invalidateQueries({ queryKey: ["service-logs"] });
     },
   });
 }
@@ -147,9 +169,12 @@ export function useDeleteServiceItem() {
         .eq("id", id);
       
       if (error) throw new Error(error.message);
+      
+      await recalculateServiceLogTotal(serviceLogId);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["service-items", variables.serviceLogId] });
+      queryClient.invalidateQueries({ queryKey: ["service-logs"] });
     },
   });
 }
