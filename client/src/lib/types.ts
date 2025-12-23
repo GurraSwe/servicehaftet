@@ -1,5 +1,5 @@
 export interface Car {
-  id: number;
+  id: string;
   user_id: string;
   name: string;
   make: string;
@@ -28,8 +28,8 @@ export interface CarInput {
 }
 
 export interface ServiceLog {
-  id: number;
-  car_id: number;
+  id: string;
+  car_id: string;
   user_id: string;
   date: string;
   mileage: number;
@@ -39,7 +39,7 @@ export interface ServiceLog {
 }
 
 export interface ServiceLogInput {
-  car_id: number;
+  car_id: string;
   date: string;
   mileage: number;
   total_cost?: number;
@@ -47,8 +47,8 @@ export interface ServiceLogInput {
 }
 
 export interface ServiceItem {
-  id: number;
-  service_log_id: number;
+  id: string;
+  service_log_id: string;
   user_id: string;
   type: string;
   description?: string | null;
@@ -57,15 +57,15 @@ export interface ServiceItem {
 }
 
 export interface ServiceItemInput {
-  service_log_id: number;
+  service_log_id: string;
   type: string;
   description?: string | null;
   cost?: number;
 }
 
 export interface Reminder {
-  id: number;
-  car_id: number;
+  id: string;
+  car_id: string;
   user_id: string;
   type: string;
   due_date?: string | null;
@@ -79,7 +79,7 @@ export interface Reminder {
 }
 
 export interface ReminderInput {
-  car_id: number;
+  car_id: string;
   type: string;
   due_date?: string | null;
   due_mileage?: number | null;

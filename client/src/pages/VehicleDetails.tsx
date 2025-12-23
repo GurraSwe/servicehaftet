@@ -16,14 +16,45 @@ import type { ServiceLog } from "@/lib/types";
 
 export default function VehicleDetails() {
   const { id } = useParams<{ id: string }>();
-  const vehicleId = Number(id);
+  const vehicleId = id || null;
   const [location] = useLocation();
   
-  const { data: vehicle, isLoading: vehicleLoading } = useCar(vehicleId);
-  const { data: serviceLogs, isLoading: servicesLoading } = useServiceLogs(vehicleId);
+  const { data: vehicle, isLoading: vehicleLoading, error: vehicleError } = useCar(vehicleId);
+  const { data: serviceLogs, isLoading: servicesLoading, error: serviceLogsError } = useServiceLogs(vehicleId);
 
   if (vehicleLoading) return <DetailsSkeleton />;
-  if (!vehicle) return <div className="p-8 text-center">Bil hittades inte</div>;
+  
+  if (vehicleError) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-8">
+        <div className="text-center max-w-md">
+          <h2 className="text-xl font-bold mb-2 text-destructive">Fel vid laddning</h2>
+          <p className="text-muted-foreground mb-4">
+            {vehicleError instanceof Error ? vehicleError.message : "Ett oväntat fel uppstod"}
+          </p>
+          <Link href="/dashboard">
+            <Button variant="outline">Tillbaka till garage</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!vehicle) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-8">
+        <div className="text-center max-w-md">
+          <h2 className="text-xl font-bold mb-2">Bil hittades inte</h2>
+          <p className="text-muted-foreground mb-4">
+            Bilen med den angivna ID:n kunde inte hittas eller så har du inte behörighet att se den.
+          </p>
+          <Link href="/dashboard">
+            <Button variant="outline">Tillbaka till garage</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const totalSpent = serviceLogs?.reduce((sum, s) => sum + (s.total_cost || 0), 0) || 0;
   const lastService = serviceLogs && serviceLogs.length > 0 
@@ -56,7 +87,7 @@ export default function VehicleDetails() {
             
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
               <EditVehicleDialog vehicle={vehicle} />
-              <AddServiceDialog vehicleId={vehicleId} currentMileage={vehicle.current_mileage || 0} />
+              <AddServiceDialog vehicleId={vehicle.id} currentMileage={vehicle.current_mileage || 0} />
             </div>
           </div>
         </div>
@@ -158,15 +189,23 @@ export default function VehicleDetails() {
                 <Skeleton className="h-24 w-full" />
                 <Skeleton className="h-24 w-full" />
               </div>
-            ) : serviceLogs?.length === 0 ? (
+            ) : serviceLogsError ? (
+              <div className="text-center py-20 bg-destructive/10 border border-destructive/20 rounded-xl">
+                <PenTool className="w-12 h-12 text-destructive/50 mx-auto mb-4" />
+                <h3 className="font-semibold text-lg text-destructive mb-2">Fel vid laddning av servicehistorik</h3>
+                <p className="text-muted-foreground mb-6">
+                  {serviceLogsError instanceof Error ? serviceLogsError.message : "Ett oväntat fel uppstod"}
+                </p>
+              </div>
+            ) : !serviceLogs || serviceLogs.length === 0 ? (
               <div className="text-center py-20 bg-card rounded-xl border border-dashed">
                 <PenTool className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
                 <h3 className="font-semibold text-lg">Ingen servicehistorik</h3>
                 <p className="text-muted-foreground mb-6">Logga din första service eller underhållsåtgärd för bilen.</p>
-                <AddServiceDialog vehicleId={vehicleId} currentMileage={vehicle.current_mileage || 0} />
+                <AddServiceDialog vehicleId={vehicle.id} currentMileage={vehicle.current_mileage || 0} />
               </div>
             ) : (
-              serviceLogs?.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+              serviceLogs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
                 .map((serviceLog: ServiceLog) => (
                   <ServiceItem key={serviceLog.id} service={serviceLog} />
                 ))

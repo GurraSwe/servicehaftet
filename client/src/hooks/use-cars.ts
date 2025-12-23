@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import type { Car, CarInput } from "@/lib/types";
+import { isValidUUID } from "@/lib/utils";
 
 export function useCars() {
   return useQuery({
@@ -17,24 +18,30 @@ export function useCars() {
   });
 }
 
-export function useCar(id: number) {
+export function useCar(id: string | null | undefined) {
+  const validId = id && id.trim() !== "" ? id : null;
+  const isValid = validId ? isValidUUID(validId) : false;
+  
   return useQuery({
-    queryKey: ["cars", id],
+    queryKey: ["cars", validId],
     queryFn: async (): Promise<Car | null> => {
-      if (!id) return null;
+      if (!validId || !isValid) return null;
+      
       const { data, error } = await supabase
         .from("cars")
         .select("*")
-        .eq("id", id)
+        .eq("id", validId)
         .single();
       
       if (error) {
+        // PGRST116 = no rows returned
         if (error.code === "PGRST116") return null;
         throw new Error(error.message);
       }
       return data;
     },
-    enabled: !!id,
+    enabled: !!validId && isValid,
+    retry: false,
   });
 }
 
@@ -66,7 +73,11 @@ export function useCreateCar() {
 export function useUpdateCar() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...input }: { id: number } & Partial<CarInput>): Promise<Car> => {
+    mutationFn: async ({ id, ...input }: { id: string } & Partial<CarInput>): Promise<Car> => {
+      if (!id || !isValidUUID(id)) {
+        throw new Error("Invalid vehicle ID");
+      }
+      
       const { data, error } = await supabase
         .from("cars")
         .update(input)
@@ -75,6 +86,8 @@ export function useUpdateCar() {
         .single();
       
       if (error) throw new Error(error.message);
+      if (!data) throw new Error("Failed to update vehicle");
+      
       return data;
     },
     onSuccess: (data) => {
@@ -87,7 +100,11 @@ export function useUpdateCar() {
 export function useDeleteCar() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (id: number): Promise<void> => {
+    mutationFn: async (id: string): Promise<void> => {
+      if (!id || !isValidUUID(id)) {
+        throw new Error("Invalid vehicle ID");
+      }
+      
       const { error } = await supabase
         .from("cars")
         .delete()

@@ -69,7 +69,7 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 interface AddServiceDialogProps {
-  vehicleId: number;
+  vehicleId: string;
   currentMileage?: number;
 }
 

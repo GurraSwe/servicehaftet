@@ -1,22 +1,28 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import type { Reminder, ReminderInput } from "@/lib/types";
+import { isValidUUID } from "@/lib/utils";
 
-export function useReminders(carId: number) {
+export function useReminders(carId: string | null | undefined) {
+  const validId = carId && carId.trim() !== "" ? carId : null;
+  const isValid = validId ? isValidUUID(validId) : false;
+  
   return useQuery({
-    queryKey: ["reminders", carId],
+    queryKey: ["reminders", validId],
     queryFn: async (): Promise<Reminder[]> => {
-      if (!carId) return [];
+      if (!validId || !isValid) return [];
+      
       const { data, error } = await supabase
         .from("reminders")
         .select("*")
-        .eq("car_id", carId)
+        .eq("car_id", validId)
         .order("created_at", { ascending: false });
       
       if (error) throw new Error(error.message);
       return data || [];
     },
-    enabled: !!carId,
+    enabled: !!validId && isValid,
+    retry: false,
   });
 }
 
@@ -42,18 +48,24 @@ export function useCreateReminder() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
       
+      if (!input.car_id || !isValidUUID(input.car_id)) {
+        throw new Error("Invalid vehicle ID");
+      }
+      
       const { data, error } = await supabase
         .from("reminders")
         .insert({
           ...input,
           user_id: user.id,
-          recurring: input.recurring || false,
+          recurring: input.recurring ?? false,
           is_completed: false,
         })
         .select()
         .single();
       
       if (error) throw new Error(error.message);
+      if (!data) throw new Error("Failed to create reminder");
+      
       return data;
     },
     onSuccess: (_, variables) => {
@@ -66,7 +78,14 @@ export function useCreateReminder() {
 export function useUpdateReminder() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, carId, ...input }: { id: number; carId: number } & Partial<ReminderInput> & { is_completed?: boolean }): Promise<Reminder> => {
+    mutationFn: async ({ id, carId, ...input }: { id: string; carId: string } & Partial<ReminderInput> & { is_completed?: boolean }): Promise<Reminder> => {
+      if (!id || !isValidUUID(id)) {
+        throw new Error("Invalid reminder ID");
+      }
+      if (!carId || !isValidUUID(carId)) {
+        throw new Error("Invalid vehicle ID");
+      }
+      
       const { data, error } = await supabase
         .from("reminders")
         .update(input)
@@ -75,6 +94,8 @@ export function useUpdateReminder() {
         .single();
       
       if (error) throw new Error(error.message);
+      if (!data) throw new Error("Failed to update reminder");
+      
       return data;
     },
     onSuccess: (_, variables) => {
@@ -87,7 +108,14 @@ export function useUpdateReminder() {
 export function useDeleteReminder() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, carId }: { id: number; carId: number }): Promise<void> => {
+    mutationFn: async ({ id, carId }: { id: string; carId: string }): Promise<void> => {
+      if (!id || !isValidUUID(id)) {
+        throw new Error("Invalid reminder ID");
+      }
+      if (!carId || !isValidUUID(carId)) {
+        throw new Error("Invalid vehicle ID");
+      }
+      
       const { error } = await supabase
         .from("reminders")
         .delete()
@@ -105,7 +133,14 @@ export function useDeleteReminder() {
 export function useCompleteReminder() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, carId }: { id: number; carId: number }): Promise<Reminder> => {
+    mutationFn: async ({ id, carId }: { id: string; carId: string }): Promise<Reminder> => {
+      if (!id || !isValidUUID(id)) {
+        throw new Error("Invalid reminder ID");
+      }
+      if (!carId || !isValidUUID(carId)) {
+        throw new Error("Invalid vehicle ID");
+      }
+      
       const { data, error } = await supabase
         .from("reminders")
         .update({ is_completed: true })
@@ -114,6 +149,8 @@ export function useCompleteReminder() {
         .single();
       
       if (error) throw new Error(error.message);
+      if (!data) throw new Error("Failed to complete reminder");
+      
       return data;
     },
     onSuccess: (_, variables) => {
