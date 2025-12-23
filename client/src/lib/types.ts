@@ -33,7 +33,7 @@ export interface ServiceLog {
   user_id: string;
   date: string;
   mileage: number;
-  total_cost: number;
+  total_cost?: number | null; // Optional - column may not exist in database
   notes?: string | null;
   created_at: string;
 }

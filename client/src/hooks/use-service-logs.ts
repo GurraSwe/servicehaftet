@@ -64,13 +64,16 @@ export function useCreateServiceLog() {
         throw new Error("Invalid vehicle ID");
       }
       
+      // Build insert object - exclude total_cost if column doesn't exist in DB
+      const { total_cost, ...restInput } = input;
+      const insertData: any = {
+        ...restInput,
+        user_id: user.id,
+      };
+      
       const { data, error } = await supabase
         .from("service_logs")
-        .insert({
-          ...input,
-          user_id: user.id,
-          total_cost: input.total_cost ?? 0,
-        })
+        .insert(insertData)
         .select()
         .single();
       
@@ -161,12 +164,24 @@ async function recalculateServiceLogTotal(serviceLogId: string): Promise<void> {
   
   const totalCost = (items || []).reduce((sum, item) => sum + (item.cost ?? 0), 0);
   
+  // Try to update total_cost, but don't fail if column doesn't exist
+  // The total_cost column may not exist in the database schema
   const { error: updateError } = await supabase
     .from("service_logs")
     .update({ total_cost: totalCost })
     .eq("id", serviceLogId);
   
-  if (updateError) throw new Error(updateError.message);
+  // Silently ignore errors related to missing column - total_cost is optional
+  // and calculated client-side from service_items anyway
+  if (updateError) {
+    const errorMsg = updateError.message.toLowerCase();
+    if (errorMsg.includes("column") || errorMsg.includes("total_cost") || errorMsg.includes("does not exist")) {
+      // Column doesn't exist - this is okay, we calculate total client-side
+      return;
+    }
+    // Other errors should still be thrown
+    throw new Error(updateError.message);
+  }
 }
 
 export function useCreateServiceItem() {

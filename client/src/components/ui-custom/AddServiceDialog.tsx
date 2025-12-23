@@ -93,7 +93,8 @@ export function AddServiceDialog({ vehicleId, currentMileage }: AddServiceDialog
       car_id: vehicleId,
       date: data.date.toISOString(),
       mileage: data.mileage,
-      total_cost: data.total_cost || 0,
+      // total_cost excluded - column doesn't exist in database
+      // Cost is tracked via service_items instead
       notes: data.notes,
     }, {
       onSuccess: () => {

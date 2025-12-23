@@ -56,9 +56,9 @@ export function ServiceItem({ service }: ServiceItemProps) {
           <span className="flex items-center gap-1">
             <span className="font-medium text-foreground">{service.mileage.toLocaleString('sv-SE')}</span> km
           </span>
-          {service.total_cost > 0 && (
+          {(service.total_cost ?? 0) > 0 && (
             <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/10 text-green-700 dark:text-green-400 font-medium text-xs">
-              {service.total_cost.toLocaleString('sv-SE')} kr
+              {(service.total_cost ?? 0).toLocaleString('sv-SE')} kr
             </span>
           )}
         </div>
