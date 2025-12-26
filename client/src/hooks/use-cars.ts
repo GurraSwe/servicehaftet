@@ -70,17 +70,32 @@ export function useCreateCar() {
       if (!user) throw new Error("Not authenticated");
       
       const payload = normalizeCarPayload(input);
+      // Ensure license_plate is explicitly null if empty to avoid unique constraint violations
+      const insertData = {
+        ...payload,
+        user_id: user.id,
+        license_plate: payload.license_plate || null,
+        vin: payload.vin || null,
+        notes: payload.notes || null,
+      };
       const { data, error } = await supabase
         .from("cars")
-        .insert({
-          ...payload,
-          user_id: user.id,
-        })
-        .select()
-        .single();
+        .insert(insertData)
+        .select();
       
-      if (error) throw new Error(error.message);
-      return data;
+      if (error) {
+        // Provide a more user-friendly error for unique constraint violations
+        if (error.message.includes("unique constraint") || error.message.includes("duplicate")) {
+          throw new Error("En bil med detta registreringsnummer finns redan. Var vänlig ange ett unikt registreringsnummer eller lämna fältet tomt.");
+        }
+        throw new Error(error.message || "Kunde inte skapa fordonet");
+      }
+      
+      if (!data || data.length === 0) {
+        throw new Error("Fordonet kunde inte skapas");
+      }
+      
+      return data[0];
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cars"] });
@@ -101,13 +116,21 @@ export function useUpdateCar() {
         .from("cars")
         .update(payload)
         .eq("id", id)
-        .select()
-        .single();
+        .select();
       
-      if (error) throw new Error(error.message);
-      if (!data) throw new Error("Failed to update vehicle");
+      if (error) {
+        throw new Error(error.message || "Kunde inte uppdatera fordonet");
+      }
       
-      return data;
+      if (!data || data.length === 0) {
+        throw new Error("Fordonet kunde inte hittas eller uppdateras");
+      }
+      
+      if (data.length > 1) {
+        console.warn("Multiple cars returned for single ID:", id);
+      }
+      
+      return data[0];
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["cars"] });
