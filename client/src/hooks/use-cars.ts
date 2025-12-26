@@ -1,7 +1,25 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import type { Car, CarInput } from "@/lib/types";
-import { isValidUUID } from "@/lib/utils";
+
+const toNullableString = (value?: string | null) => {
+  if (value === undefined || value === null) return null;
+  const trimmed = value.trim();
+  return trimmed.length === 0 ? null : trimmed;
+};
+
+function normalizeCarPayload<T extends Partial<CarInput>>(input: T): T {
+  return {
+    ...input,
+    vin: toNullableString(input.vin ?? null) as T["vin"],
+    license_plate: toNullableString(input.license_plate ?? null) as T["license_plate"],
+    notes: toNullableString(input.notes ?? null) as T["notes"],
+    service_interval_months:
+      input.service_interval_months === undefined ? null : input.service_interval_months,
+    service_interval_kilometers:
+      input.service_interval_kilometers === undefined ? null : input.service_interval_kilometers,
+  };
+}
 
 export function useCars() {
   return useQuery({
@@ -20,12 +38,11 @@ export function useCars() {
 
 export function useCar(id: string | null | undefined) {
   const validId = id && id.trim() !== "" ? id : null;
-  const isValid = validId ? isValidUUID(validId) : false;
   
   return useQuery({
     queryKey: ["cars", validId],
     queryFn: async (): Promise<Car | null> => {
-      if (!validId || !isValid) return null;
+      if (!validId) return null;
       
       const { data, error } = await supabase
         .from("cars")
@@ -34,13 +51,13 @@ export function useCar(id: string | null | undefined) {
         .single();
       
       if (error) {
-        // PGRST116 = no rows returned
-        if (error.code === "PGRST116") return null;
+        // PGRST116 = no rows returned, 22P02 = invalid input syntax (e.g. malformed ID)
+        if (error.code === "PGRST116" || error.code === "22P02") return null;
         throw new Error(error.message);
       }
       return data;
     },
-    enabled: !!validId && isValid,
+    enabled: !!validId,
     retry: false,
   });
 }
@@ -52,10 +69,11 @@ export function useCreateCar() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
       
+      const payload = normalizeCarPayload(input);
       const { data, error } = await supabase
         .from("cars")
         .insert({
-          ...input,
+          ...payload,
           user_id: user.id,
         })
         .select()
@@ -74,13 +92,14 @@ export function useUpdateCar() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...input }: { id: string } & Partial<CarInput>): Promise<Car> => {
-      if (!id || !isValidUUID(id)) {
-        throw new Error("Invalid vehicle ID");
+      if (!id) {
+        throw new Error("Ogiltigt fordon-ID");
       }
       
+      const payload = normalizeCarPayload(input);
       const { data, error } = await supabase
         .from("cars")
-        .update(input)
+        .update(payload)
         .eq("id", id)
         .select()
         .single();
@@ -101,8 +120,8 @@ export function useDeleteCar() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string): Promise<void> => {
-      if (!id || !isValidUUID(id)) {
-        throw new Error("Invalid vehicle ID");
+      if (!id) {
+        throw new Error("Ogiltigt fordon-ID");
       }
       
       const { error } = await supabase
