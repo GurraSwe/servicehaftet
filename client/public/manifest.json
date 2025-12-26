@@ -1,0 +1,27 @@
+{
+  "name": "ServiceHäftet",
+  "short_name": "ServiceHäftet",
+  "description": "Digital servicebok för att hålla koll på fordon, servicehistorik och påminnelser.",
+  "lang": "sv",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#05060a",
+  "theme_color": "#1d4ed8",
+  "icons": [
+    {
+      "src": "/icon/icon.jpeg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon/icon.jpeg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}
+

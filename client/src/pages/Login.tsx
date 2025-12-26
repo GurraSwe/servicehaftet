@@ -153,6 +153,17 @@ export default function Login() {
                   ? "Har du inget konto? Registrera dig" 
                   : "Har du redan ett konto? Logga in"}
               </button>
+              <p className="mt-4 text-xs text-muted-foreground">
+                Genom att fortsätta godkänner du våra{" "}
+                <Link href="/anvandarvillkor" className="underline hover:text-foreground">
+                  användarvillkor
+                </Link>{" "}
+                och{" "}
+                <Link href="/integritetspolicy" className="underline hover:text-foreground">
+                  integritetspolicy
+                </Link>
+                .
+              </p>
             </div>
           </CardContent>
         </Card>

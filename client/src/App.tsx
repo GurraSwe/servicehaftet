@@ -11,6 +11,8 @@ import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
 import VehicleDetails from "@/pages/VehicleDetails";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import Terms from "@/pages/Terms";
 
 function LoadingScreen() {
   return (
@@ -43,6 +45,14 @@ function Router() {
       
       <Route path="/vehicles/:id">
         {isAuthenticated ? <VehicleDetails /> : <Redirect to="/" />}
+      </Route>
+
+      <Route path="/integritetspolicy">
+        <PrivacyPolicy />
+      </Route>
+
+      <Route path="/anvandarvillkor">
+        <Terms />
       </Route>
       
       <Route component={NotFound} />

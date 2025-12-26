@@ -7,6 +7,7 @@ import { LogOut, LayoutGrid, List } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
 import type { Car } from "@/lib/types";
+import { PushNotificationPrompt } from "@/components/ui-custom/PushNotificationPrompt";
 
 export default function Dashboard() {
   const { logout, user } = useAuth();
@@ -35,8 +36,10 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <main className="container py-8 sm:py-10">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+      <main className="container py-8 sm:py-10 space-y-6">
+        <PushNotificationPrompt variant="banner" />
+
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h2 className="text-3xl font-display font-bold tracking-tight">Dina bilar</h2>
             <p className="text-muted-foreground mt-1">Hantera dina bilar, service och underhåll på ett ställe.</p>

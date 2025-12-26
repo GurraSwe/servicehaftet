@@ -73,8 +73,9 @@ export default function Landing() {
                   variant="outline" 
                   size="lg" 
                   className="text-lg h-14 px-8 rounded-xl border-2 hover:bg-muted/50"
+                  asChild
                 >
-                  Läs mer
+                  <a href="#gdpr">Läs mer</a>
                 </Button>
               </div>
             </div>
@@ -123,18 +124,58 @@ export default function Landing() {
             </div>
           </div>
         </section>
+
+        {/* GDPR Section */}
+        <section id="gdpr" className="py-16 border-t border-border/40 bg-background">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="bg-card border border-border rounded-3xl p-8 flex flex-col gap-4">
+              <div className="flex items-center gap-3">
+                <div className="bg-primary/10 text-primary rounded-2xl p-3 w-fit">
+                  <ShieldCheck className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground font-semibold">GDPR & Dataskydd</p>
+                  <h3 className="text-2xl font-display font-bold">Vi följer GDPR och skyddar din data</h3>
+                </div>
+              </div>
+              <p className="text-muted-foreground leading-relaxed">
+                Vi följer GDPR. Endast nödvändig data lagras för att appen ska fungera. Ingen data delas med tredje part.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Link href="/integritetspolicy">
+                  <Button variant="outline">Läs integritetspolicy</Button>
+                </Link>
+                <Link href="/anvandarvillkor">
+                  <Button variant="ghost">Användarvillkor</Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
 
       {/* Footer */}
       <footer className="bg-card border-t border-border py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-2 opacity-70">
-            <Car className="w-5 h-5" />
-            <span className="font-display font-bold">ServiceHäftet</span>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-6">
+          <div className="flex flex-col md:flex-row justify-between gap-4">
+            <div className="flex items-center gap-2 opacity-80">
+              <Car className="w-5 h-5" />
+              <span className="font-display font-bold">ServiceHäftet</span>
+            </div>
+            <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+              <Link href="/integritetspolicy" className="hover:text-foreground transition-colors">
+                Integritetspolicy
+              </Link>
+              <Link href="/anvandarvillkor" className="hover:text-foreground transition-colors">
+                Användarvillkor
+              </Link>
+              <a href="#gdpr" className="hover:text-foreground transition-colors">
+                GDPR & Dataskydd
+              </a>
+            </div>
           </div>
-          <p className="text-sm text-muted-foreground text-center md:text-right">
-            © 2025 ServiceHäftet
-            Skapat för bilägare och entusiaster.
+          <p className="text-sm text-muted-foreground text-center md:text-left">
+            © 2025 ServiceHäftet — Skapat för bilägare och entusiaster. Endast in-app pushnotiser, inga e-postutskick.
           </p>
         </div>
       </footer>
