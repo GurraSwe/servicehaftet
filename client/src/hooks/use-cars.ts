@@ -89,6 +89,7 @@ export function useCars() {
       return (data || []) as Car[];
     },
     staleTime: 0, // Always consider data stale to ensure fresh fetches after mutations
+    refetchOnMount: true, // Always refetch when component mounts
   });
 }
 
@@ -151,13 +152,33 @@ export function useCreateCar() {
       return data as Car;
     },
     onSuccess: (newCar) => {
+      console.log("Car created successfully, updating cache. New car ID:", newCar.id);
       
-      // Invalidate and refetch the cars list
-      // This ensures the UI updates with the latest data from the server
-      queryClient.invalidateQueries({ queryKey: ["cars"] });
+      // Optimistically update the cache immediately
+      queryClient.setQueryData<Car[]>(["cars"], (oldCars) => {
+        console.log("Updating cache. Old cars count:", oldCars?.length || 0);
+        if (!oldCars) {
+          console.log("No old cars, returning new car");
+          return [newCar];
+        }
+        // Check if already exists (shouldn't happen, but safe)
+        if (oldCars.some(car => car.id === newCar.id)) {
+          console.log("Car already exists in cache, updating");
+          return oldCars.map(car => car.id === newCar.id ? newCar : car);
+        }
+        // Add new car at the beginning (most recent first)
+        const updated = [newCar, ...oldCars];
+        console.log("Added new car to cache. New count:", updated.length);
+        return updated;
+      });
       
-      // Also set individual car cache for immediate access
+      // Set individual car cache
       queryClient.setQueryData(["car", newCar.id], newCar);
+      
+      // Invalidate and refetch to ensure consistency
+      queryClient.invalidateQueries({ queryKey: ["cars"] });
+      // Force immediate refetch of active queries
+      queryClient.refetchQueries({ queryKey: ["cars"] });
     },
   });
 }
