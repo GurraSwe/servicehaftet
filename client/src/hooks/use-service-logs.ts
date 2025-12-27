@@ -59,6 +59,19 @@ export function useCreateServiceLog() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
+      // Verify the car exists first (helps with better error messages)
+      const { data: carCheck, error: carError } = await supabase
+        .from("cars")
+        .select("id")
+        .eq("id", input.car_id)
+        .eq("user_id", user.id)
+        .single();
+
+      if (carError || !carCheck) {
+        console.error("Car not found or access denied. Car ID:", input.car_id, "Error:", carError);
+        throw new Error("Car not found. The car may have been deleted or there's a schema mismatch. Please refresh the page.");
+      }
+
       const serviceLogData = {
         ...input,
         user_id: user.id,
@@ -72,7 +85,14 @@ export function useCreateServiceLog() {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error creating service log:", error);
+        // Provide more helpful error message for foreign key violations
+        if (error.code === '23503' || error.message.includes('foreign key')) {
+          throw new Error("Car not found. This usually means the car has an incompatible ID format. Please delete old cars and create new ones.");
+        }
+        throw new Error(error.message || "Failed to create service log");
+      }
       return data as ServiceLog;
     },
     onSuccess: (_, variables) => {

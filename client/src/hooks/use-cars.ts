@@ -75,8 +75,6 @@ export function useCars() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      console.log("Fetching cars for user:", user.id);
-
       const { data, error } = await supabase
         .from("cars")
         .select("*")
@@ -88,7 +86,6 @@ export function useCars() {
         throw error;
       }
       
-      console.log("Fetched cars from database:", data);
       return (data || []) as Car[];
     },
     staleTime: 0, // Always consider data stale to ensure fresh fetches after mutations
@@ -135,7 +132,6 @@ export function useCreateCar() {
         user_id: user.id,
       };
 
-      console.log("CREATING CAR:", carData);
 
       const { data, error } = await supabase
         .from("cars")
@@ -152,12 +148,9 @@ export function useCreateCar() {
         throw new Error("No data returned from insert");
       }
 
-      console.log("Car created successfully:", data);
-      
       return data as Car;
     },
     onSuccess: (newCar) => {
-      console.log("Mutation success - new car ID:", newCar.id);
       
       // Invalidate and refetch the cars list
       // This ensures the UI updates with the latest data from the server
@@ -180,38 +173,24 @@ export function useUpdateCar() {
 
       const cleanedData = cleanCarData(input);
 
-      console.log("UPDATING CAR:", { id, ...cleanedData });
 
-      // First update without select to avoid 406 error
-      const { error: updateError } = await supabase
+      const { data, error } = await supabase
         .from("cars")
         .update(cleanedData)
         .eq("id", id)
-        .eq("user_id", user.id);
-
-      if (updateError) {
-        console.error("Error updating car:", updateError);
-        throw new Error(updateError.message || "Failed to update car");
-      }
-
-      // Then fetch the updated car
-      const { data, error: fetchError } = await supabase
-        .from("cars")
-        .select("*")
-        .eq("id", id)
         .eq("user_id", user.id)
-        .maybeSingle();
+        .select()
+        .single();
 
-      if (fetchError) {
-        console.error("Error fetching updated car:", fetchError);
-        throw new Error(fetchError.message || "Failed to fetch updated car");
+      if (error) {
+        console.error("Error updating car:", error);
+        throw new Error(error.message || "Failed to update car");
       }
 
       if (!data) {
         throw new Error("Car not found or you don't have permission to update it");
       }
 
-      console.log("Car updated successfully:", data);
       
       // Update cache immediately
       queryClient.setQueryData(["car", id], data);
@@ -237,7 +216,6 @@ export function useDeleteCar() {
 
       if (!id) throw new Error("Invalid car ID");
 
-      console.log("DELETING CAR:", id);
 
       const { error } = await supabase
         .from("cars")
@@ -250,7 +228,6 @@ export function useDeleteCar() {
         throw new Error(error.message || "Failed to delete car");
       }
 
-      console.log("Car deleted successfully");
       
       // Remove from cache
       queryClient.removeQueries({ queryKey: ["car", id] });
