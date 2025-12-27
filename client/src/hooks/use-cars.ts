@@ -75,6 +75,8 @@ export function useCars() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
+      console.log("Fetching cars for user:", user.id);
+
       const { data, error } = await supabase
         .from("cars")
         .select("*")
@@ -84,6 +86,11 @@ export function useCars() {
       if (error) {
         console.error("Error fetching cars:", error);
         throw error;
+      }
+      
+      console.log("Fetched cars from database:", data?.length || 0, "cars");
+      if (data && data.length > 0) {
+        console.log("Car IDs:", data.map(c => c.id));
       }
       
       return (data || []) as Car[];
@@ -134,6 +141,7 @@ export function useCreateCar() {
         user_id: user.id,
       };
 
+      console.log("Creating car with user_id:", user.id);
 
       const { data, error } = await supabase
         .from("cars")
