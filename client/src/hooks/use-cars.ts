@@ -141,7 +141,7 @@ export function useCreateCar() {
         user_id: user.id,
       };
 
-      console.log("Creating car with user_id:", user.id);
+      console.log("Creating car with user_id:", user.id, "data:", carData);
 
       const { data, error } = await supabase
         .from("cars")
@@ -155,7 +155,26 @@ export function useCreateCar() {
       }
 
       if (!data) {
+        console.error("No data returned from insert - this is unusual!");
         throw new Error("No data returned from insert");
+      }
+
+      console.log("Car created successfully! ID:", data.id, "user_id:", (data as any).user_id);
+      
+      // Verify the car can be fetched immediately
+      const { data: verifyData, error: verifyError } = await supabase
+        .from("cars")
+        .select("*")
+        .eq("id", data.id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+        
+      if (verifyError) {
+        console.error("Error verifying car after creation:", verifyError);
+      } else if (!verifyData) {
+        console.error("WARNING: Car was created but cannot be fetched - likely RLS issue!");
+      } else {
+        console.log("Car verified - can be fetched successfully");
       }
 
       return data as Car;
