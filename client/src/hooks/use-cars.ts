@@ -77,6 +77,17 @@ export function useCars() {
 
       console.log("Fetching cars for user:", user.id);
 
+      // First, let's try fetching without the user_id filter to see what we get
+      const { data: allData, error: allError } = await supabase
+        .from("cars")
+        .select("*");
+
+      console.log("All cars in database (no filter):", allData?.length || 0);
+      if (allData && allData.length > 0) {
+        console.log("All car user_ids:", allData.map(c => ({ id: c.id, user_id: c.user_id })));
+      }
+
+      // Now fetch with user_id filter
       const { data, error } = await supabase
         .from("cars")
         .select("*")
@@ -88,9 +99,13 @@ export function useCars() {
         throw error;
       }
       
-      console.log("Fetched cars from database:", data?.length || 0, "cars");
+      console.log("Fetched cars with user_id filter:", data?.length || 0, "cars");
+      console.log("Query user_id:", user.id);
       if (data && data.length > 0) {
         console.log("Car IDs:", data.map(c => c.id));
+        console.log("Car user_ids:", data.map(c => c.user_id));
+      } else {
+        console.warn("No cars returned! Check if user_id matches.");
       }
       
       return (data || []) as Car[];
