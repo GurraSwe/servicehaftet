@@ -67,18 +67,15 @@ export function useCar(id: string | null) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      const carId = typeof id === "string" ? parseInt(id, 10) : id;
-      if (isNaN(carId)) throw new Error("Invalid car ID");
-
       const { data, error } = await supabase
         .from("cars")
         .select("*")
-        .eq("id", carId)
+        .eq("id", id)
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
-      return data as Car;
+      return data as Car | null;
     },
     enabled: !!id,
   });
@@ -105,21 +102,28 @@ export function useCreateCar() {
       const { data, error } = await supabase
         .from("cars")
         .insert(carData)
-        .select();
+        .select()
+        .single();
 
       if (error) {
         console.error("Error creating car:", error);
         throw new Error(error.message || "Failed to create car");
       }
 
-      if (!data || data.length === 0) {
+      if (!data) {
         throw new Error("No data returned from insert");
       }
 
-      console.log("Car created successfully:", data[0]);
-      return data[0] as Car;
+      console.log("Car created successfully:", data);
+      
+      // Invalidate and refetch immediately
+      queryClient.invalidateQueries({ queryKey: ["cars"] });
+      queryClient.setQueryData(["car", data.id], data);
+      
+      return data as Car;
     },
     onSuccess: () => {
+      // Force refetch of cars list
       queryClient.invalidateQueries({ queryKey: ["cars"] });
     },
   });
@@ -130,7 +134,7 @@ export function useUpdateCar() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, ...input }: CarInput & { id: number }) => {
+    mutationFn: async ({ id, ...input }: CarInput & { id: string }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
@@ -138,28 +142,46 @@ export function useUpdateCar() {
 
       console.log("UPDATING CAR:", { id, ...cleanedData });
 
-      const { data, error } = await supabase
+      // First update without select to avoid 406 error
+      const { error: updateError } = await supabase
         .from("cars")
         .update(cleanedData)
         .eq("id", id)
-        .eq("user_id", user.id)
-        .select();
+        .eq("user_id", user.id);
 
-      if (error) {
-        console.error("Error updating car:", error);
-        throw new Error(error.message || "Failed to update car");
+      if (updateError) {
+        console.error("Error updating car:", updateError);
+        throw new Error(updateError.message || "Failed to update car");
       }
 
-      if (!data || data.length === 0) {
+      // Then fetch the updated car
+      const { data, error: fetchError } = await supabase
+        .from("cars")
+        .select("*")
+        .eq("id", id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (fetchError) {
+        console.error("Error fetching updated car:", fetchError);
+        throw new Error(fetchError.message || "Failed to fetch updated car");
+      }
+
+      if (!data) {
         throw new Error("Car not found or you don't have permission to update it");
       }
 
-      console.log("Car updated successfully:", data[0]);
-      return data[0] as Car;
+      console.log("Car updated successfully:", data);
+      
+      // Update cache immediately
+      queryClient.setQueryData(["car", id], data);
+      queryClient.invalidateQueries({ queryKey: ["cars"] });
+      
+      return data as Car;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["cars"] });
-      queryClient.invalidateQueries({ queryKey: ["car", variables.id.toString()] });
+      queryClient.invalidateQueries({ queryKey: ["car", variables.id] });
     },
   });
 }
@@ -169,27 +191,29 @@ export function useDeleteCar() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (id: number | string) => {
+    mutationFn: async (id: string) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      const carId = typeof id === "string" ? parseInt(id, 10) : id;
-      if (isNaN(carId)) throw new Error("Invalid car ID");
+      if (!id) throw new Error("Invalid car ID");
 
-      console.log("DELETING CAR:", carId);
+      console.log("DELETING CAR:", id);
 
       const { error } = await supabase
         .from("cars")
         .delete()
-        .eq("id", carId)
+        .eq("id", id)
         .eq("user_id", user.id);
 
       if (error) {
         console.error("Error deleting car:", error);
-        throw error;
+        throw new Error(error.message || "Failed to delete car");
       }
 
       console.log("Car deleted successfully");
+      
+      // Remove from cache
+      queryClient.removeQueries({ queryKey: ["car", id] });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cars"] });

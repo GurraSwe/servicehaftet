@@ -12,13 +12,10 @@ export function useReminders(carId: string | null) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      const id = typeof carId === "string" ? parseInt(carId, 10) : carId;
-      if (isNaN(id)) throw new Error("Invalid car ID");
-
       const { data, error } = await supabase
         .from("reminders")
         .select("*")
-        .eq("car_id", id)
+        .eq("car_id", carId)
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
@@ -60,7 +57,7 @@ export function useCreateReminder() {
       return data as Reminder;
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["reminders", variables.car_id.toString()] });
+      queryClient.invalidateQueries({ queryKey: ["reminders", variables.car_id] });
     },
   });
 }
@@ -70,7 +67,7 @@ export function useUpdateReminder() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, ...input }: ReminderInput & { id: number }) => {
+    mutationFn: async ({ id, ...input }: ReminderInput & { id: string }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
@@ -96,7 +93,7 @@ export function useDeleteReminder() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (id: number) => {
+    mutationFn: async (id: string) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
@@ -119,7 +116,7 @@ export function useCompleteReminder() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (id: number) => {
+    mutationFn: async (id: string) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 

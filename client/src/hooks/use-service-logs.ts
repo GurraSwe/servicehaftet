@@ -12,13 +12,10 @@ export function useServiceLogs(carId: string | null) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      const id = typeof carId === "string" ? parseInt(carId, 10) : carId;
-      if (isNaN(id)) throw new Error("Invalid car ID");
-
       const { data, error } = await supabase
         .from("service_logs")
         .select("*")
-        .eq("car_id", id)
+        .eq("car_id", carId)
         .eq("user_id", user.id)
         .order("date", { ascending: false });
 
@@ -39,18 +36,15 @@ export function useServiceLog(id: string | null) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      const logId = typeof id === "string" ? parseInt(id, 10) : id;
-      if (isNaN(logId)) throw new Error("Invalid service log ID");
-
       const { data, error } = await supabase
         .from("service_logs")
         .select("*")
-        .eq("id", logId)
+        .eq("id", id)
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
-      return data as ServiceLog;
+      return data as ServiceLog | null;
     },
     enabled: !!id,
   });
@@ -82,7 +76,7 @@ export function useCreateServiceLog() {
       return data as ServiceLog;
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["service-logs", variables.car_id.toString()] });
+      queryClient.invalidateQueries({ queryKey: ["service-logs", variables.car_id] });
     },
   });
 }
@@ -92,7 +86,7 @@ export function useDeleteServiceLog() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (id: number) => {
+    mutationFn: async (id: string) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
@@ -111,7 +105,7 @@ export function useDeleteServiceLog() {
 }
 
 // Fetch service items for a service log
-export function useServiceItems(serviceLogId: number | null) {
+export function useServiceItems(serviceLogId: string | null) {
   return useQuery({
     queryKey: ["service-items", serviceLogId],
     queryFn: async () => {
@@ -170,7 +164,7 @@ export function useDeleteServiceItem() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (id: number) => {
+    mutationFn: async (id: string) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
