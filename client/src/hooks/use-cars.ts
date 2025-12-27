@@ -106,7 +106,6 @@ export function useCars() {
       return (data || []) as Car[];
     },
     staleTime: 0, // Always consider data stale to ensure fresh fetches after mutations
-    gcTime: 0, // Don't cache in background (formerly cacheTime)
     refetchOnMount: 'always', // Always refetch when component mounts
     refetchOnWindowFocus: false, // Don't refetch on window focus
   });
@@ -190,22 +189,16 @@ export function useCreateCar() {
       return data as Car;
     },
     onSuccess: async (newCar) => {
-      console.log("Mutation success - updating cache");
-      
-      // Optimistically update the cars list cache
-      queryClient.setQueryData(["cars"], (oldCars: Car[] | undefined) => {
-        if (!oldCars) return [newCar];
-        return [newCar, ...oldCars];
-      });
+      console.log("Mutation success - invalidating queries");
       
       // Set individual car cache
       queryClient.setQueryData(["car", newCar.id], newCar);
       
-      // Invalidate and refetch to ensure server consistency
-      await queryClient.invalidateQueries({ queryKey: ["cars"], exact: false });
-      await queryClient.refetchQueries({ queryKey: ["cars"], exact: false });
+      // Invalidate and refetch the cars list
+      queryClient.invalidateQueries({ queryKey: ["cars"] });
+      await queryClient.refetchQueries({ queryKey: ["cars"] });
       
-      console.log("Cache updated and refetched");
+      console.log("Cars list invalidated and refetched");
     },
   });
 }
@@ -255,22 +248,16 @@ export function useUpdateCar() {
       return updatedCar;
     },
     onSuccess: async (updatedCar, variables) => {
-      console.log("Update success - updating cache");
-      
-      // Optimistically update the cars list cache
-      queryClient.setQueryData(["cars"], (oldCars: Car[] | undefined) => {
-        if (!oldCars) return [updatedCar];
-        return oldCars.map(car => car.id === variables.id ? updatedCar : car);
-      });
+      console.log("Update success - invalidating queries");
       
       // Update individual car cache
       queryClient.setQueryData(["car", variables.id], updatedCar);
       
-      // Invalidate and refetch to ensure server consistency
-      await queryClient.invalidateQueries({ queryKey: ["cars"], exact: false });
-      await queryClient.refetchQueries({ queryKey: ["cars"], exact: false });
+      // Invalidate and refetch the cars list
+      queryClient.invalidateQueries({ queryKey: ["cars"] });
+      await queryClient.refetchQueries({ queryKey: ["cars"] });
       
-      console.log("Cache updated and refetched");
+      console.log("Cars list invalidated and refetched");
     },
   });
 }
@@ -301,22 +288,16 @@ export function useDeleteCar() {
       return id;
     },
     onSuccess: async (deletedId) => {
-      console.log("Delete success - updating cache");
-      
-      // Optimistically remove from cars list cache
-      queryClient.setQueryData(["cars"], (oldCars: Car[] | undefined) => {
-        if (!oldCars) return [];
-        return oldCars.filter(car => car.id !== deletedId);
-      });
+      console.log("Delete success - invalidating queries");
       
       // Remove individual car cache
-      queryClient.removeQueries({ queryKey: ["car", deletedId], exact: false });
+      queryClient.removeQueries({ queryKey: ["car", deletedId] });
       
-      // Invalidate and refetch to ensure server consistency
-      await queryClient.invalidateQueries({ queryKey: ["cars"], exact: false });
-      await queryClient.refetchQueries({ queryKey: ["cars"], exact: false });
+      // Invalidate and refetch the cars list
+      queryClient.invalidateQueries({ queryKey: ["cars"] });
+      await queryClient.refetchQueries({ queryKey: ["cars"] });
       
-      console.log("Cache updated and refetched");
+      console.log("Cars list invalidated and refetched");
     },
   });
 }
