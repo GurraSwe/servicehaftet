@@ -60,16 +60,22 @@ export function useCreateServiceLog() {
       if (!user) throw new Error("Not authenticated");
 
       // Verify the car exists first (helps with better error messages)
+      // Use maybeSingle() instead of single() to avoid 406 errors
       const { data: carCheck, error: carError } = await supabase
         .from("cars")
         .select("id")
         .eq("id", input.car_id)
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
-      if (carError || !carCheck) {
-        console.error("Car not found or access denied. Car ID:", input.car_id, "Error:", carError);
-        throw new Error("Car not found. The car may have been deleted or there's a schema mismatch. Please refresh the page.");
+      if (carError) {
+        console.error("Error checking car:", carError);
+        throw new Error("Error verifying car. Please try again.");
+      }
+
+      if (!carCheck) {
+        console.error("Car not found. Car ID:", input.car_id);
+        throw new Error("Car not found. The car may have been deleted. Please refresh the page.");
       }
 
       const serviceLogData = {

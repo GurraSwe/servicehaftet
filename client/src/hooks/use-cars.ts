@@ -194,30 +194,42 @@ export function useUpdateCar() {
 
       const cleanedData = cleanCarData(input);
 
+      // First verify car exists and belongs to user (avoid 406 error)
+      const { data: existingCar, error: checkError } = await supabase
+        .from("cars")
+        .select("id")
+        .eq("id", id)
+        .eq("user_id", user.id)
+        .maybeSingle();
 
+      if (checkError || !existingCar) {
+        throw new Error("Car not found or you don't have permission to update it");
+      }
+
+      // Update without .single() to avoid 406 error when no rows match
       const { data, error } = await supabase
         .from("cars")
         .update(cleanedData)
         .eq("id", id)
         .eq("user_id", user.id)
-        .select()
-        .single();
+        .select();
 
       if (error) {
         console.error("Error updating car:", error);
         throw new Error(error.message || "Failed to update car");
       }
 
-      if (!data) {
-        throw new Error("Car not found or you don't have permission to update it");
+      if (!data || data.length === 0) {
+        throw new Error("Car not found or update failed");
       }
 
+      const updatedCar = data[0] as Car;
       
       // Update cache immediately
-      queryClient.setQueryData(["car", id], data);
+      queryClient.setQueryData(["car", id], updatedCar);
       queryClient.invalidateQueries({ queryKey: ["cars"] });
       
-      return data as Car;
+      return updatedCar;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["cars"] });
