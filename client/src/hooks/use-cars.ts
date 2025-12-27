@@ -77,17 +77,7 @@ export function useCars() {
 
       console.log("Fetching cars for user:", user.id);
 
-      // First, let's try fetching without the user_id filter to see what we get
-      const { data: allData, error: allError } = await supabase
-        .from("cars")
-        .select("*");
-
-      console.log("All cars in database (no filter):", allData?.length || 0);
-      if (allData && allData.length > 0) {
-        console.log("All car user_ids:", allData.map(c => ({ id: c.id, user_id: c.user_id })));
-      }
-
-      // Now fetch with user_id filter
+      // Fetch with user_id filter
       const { data, error } = await supabase
         .from("cars")
         .select("*")
@@ -96,21 +86,27 @@ export function useCars() {
 
       if (error) {
         console.error("Error fetching cars:", error);
+        console.error("Error code:", error.code);
+        console.error("Error message:", error.message);
+        console.error("Error details:", error.details);
+        console.error("Error hint:", error.hint);
         throw error;
       }
       
-      console.log("Fetched cars with user_id filter:", data?.length || 0, "cars");
-      console.log("Query user_id:", user.id);
+      console.log("Fetched cars:", data?.length || 0, "cars");
+      console.log("Raw response data:", data);
+      
       if (data && data.length > 0) {
         console.log("Car IDs:", data.map(c => c.id));
-        console.log("Car user_ids:", data.map(c => c.user_id));
       } else {
-        console.warn("No cars returned! Check if user_id matches.");
+        console.warn("⚠️ No cars returned even though car exists in database!");
+        console.warn("This indicates RLS is blocking the query or policies are still active.");
       }
       
       return (data || []) as Car[];
     },
     staleTime: 0, // Always consider data stale to ensure fresh fetches after mutations
+    gcTime: 0, // Don't cache in background (formerly cacheTime)
     refetchOnMount: 'always', // Always refetch when component mounts
     refetchOnWindowFocus: false, // Don't refetch on window focus
   });
@@ -176,55 +172,40 @@ export function useCreateCar() {
 
       console.log("Car created successfully! ID:", data.id, "user_id:", (data as any).user_id);
       
-      // Verify the car can be fetched immediately (without user_id filter to test RLS)
-      const { data: verifyDataNoFilter, error: verifyErrorNoFilter } = await supabase
-        .from("cars")
-        .select("*")
-        .eq("id", data.id)
-        .maybeSingle();
-        
-      console.log("Verify car (no user_id filter):", verifyDataNoFilter ? "SUCCESS" : "FAILED", verifyErrorNoFilter);
-      
-      // Also verify with user_id filter
+      // Verify the car can be fetched by ID
       const { data: verifyData, error: verifyError } = await supabase
         .from("cars")
         .select("*")
         .eq("id", data.id)
-        .eq("user_id", user.id)
-        .maybeSingle();
-        
-      console.log("Verify car (with user_id filter):", verifyData ? "SUCCESS" : "FAILED", verifyError);
+        .single();
         
       if (verifyError) {
-        console.error("Error verifying car after creation:", verifyError);
+        console.error("Error verifying car:", verifyError);
       } else if (!verifyData) {
-        console.error("WARNING: Car was created but cannot be fetched with user_id filter - RLS issue!");
+        console.error("WARNING: Car was created but cannot be fetched!");
       } else {
-        console.log("Car verified - can be fetched successfully");
+        console.log("Car verified - exists in database with ID:", verifyData.id);
       }
-      
-      // Also test fetching ALL cars right after creation
-      const { data: allCarsTest, error: allCarsError } = await supabase
-        .from("cars")
-        .select("*");
-        
-      console.log("Test: All cars immediately after creation:", allCarsTest?.length || 0, allCarsError);
 
       return data as Car;
     },
-    onSuccess: (newCar) => {
-      console.log("Mutation success - refetching cars list");
+    onSuccess: async (newCar) => {
+      console.log("Mutation success - updating cache");
+      
+      // Optimistically update the cars list cache
+      queryClient.setQueryData(["cars"], (oldCars: Car[] | undefined) => {
+        if (!oldCars) return [newCar];
+        return [newCar, ...oldCars];
+      });
       
       // Set individual car cache
       queryClient.setQueryData(["car", newCar.id], newCar);
       
-      // Invalidate queries (marks as stale)
-      queryClient.invalidateQueries({ queryKey: ["cars"] });
+      // Invalidate and refetch to ensure server consistency
+      await queryClient.invalidateQueries({ queryKey: ["cars"], exact: false });
+      await queryClient.refetchQueries({ queryKey: ["cars"], exact: false });
       
-      // Force refetch immediately
-      queryClient.refetchQueries({ queryKey: ["cars"] })
-        .then(() => console.log("Cars list refetched successfully"))
-        .catch(err => console.error("Error refetching cars:", err));
+      console.log("Cache updated and refetched");
     },
   });
 }
@@ -271,15 +252,25 @@ export function useUpdateCar() {
 
       const updatedCar = data[0] as Car;
       
-      // Update cache immediately
-      queryClient.setQueryData(["car", id], updatedCar);
-      queryClient.invalidateQueries({ queryKey: ["cars"] });
-      
       return updatedCar;
     },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["cars"] });
-      queryClient.invalidateQueries({ queryKey: ["car", variables.id] });
+    onSuccess: async (updatedCar, variables) => {
+      console.log("Update success - updating cache");
+      
+      // Optimistically update the cars list cache
+      queryClient.setQueryData(["cars"], (oldCars: Car[] | undefined) => {
+        if (!oldCars) return [updatedCar];
+        return oldCars.map(car => car.id === variables.id ? updatedCar : car);
+      });
+      
+      // Update individual car cache
+      queryClient.setQueryData(["car", variables.id], updatedCar);
+      
+      // Invalidate and refetch to ensure server consistency
+      await queryClient.invalidateQueries({ queryKey: ["cars"], exact: false });
+      await queryClient.refetchQueries({ queryKey: ["cars"], exact: false });
+      
+      console.log("Cache updated and refetched");
     },
   });
 }
@@ -307,12 +298,25 @@ export function useDeleteCar() {
         throw new Error(error.message || "Failed to delete car");
       }
 
-      
-      // Remove from cache
-      queryClient.removeQueries({ queryKey: ["car", id] });
+      return id;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["cars"] });
+    onSuccess: async (deletedId) => {
+      console.log("Delete success - updating cache");
+      
+      // Optimistically remove from cars list cache
+      queryClient.setQueryData(["cars"], (oldCars: Car[] | undefined) => {
+        if (!oldCars) return [];
+        return oldCars.filter(car => car.id !== deletedId);
+      });
+      
+      // Remove individual car cache
+      queryClient.removeQueries({ queryKey: ["car", deletedId], exact: false });
+      
+      // Invalidate and refetch to ensure server consistency
+      await queryClient.invalidateQueries({ queryKey: ["cars"], exact: false });
+      await queryClient.refetchQueries({ queryKey: ["cars"], exact: false });
+      
+      console.log("Cache updated and refetched");
     },
   });
 }
