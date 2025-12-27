@@ -79,13 +79,18 @@ export function useCreateCar() {
         vin: payload.vin || null,
         notes: payload.notes || null,
       };
+
+      console.log('Inserting car:', insertData);
+
       const { data, error } = await supabase
         .from("cars")
         .insert(insertData)
-        .select()
-        .single();
+        .select();
+
+      console.log('Insert response:', { data, error });
 
       if (error) {
+        console.error('Insert error:', error);
         // Provide a more user-friendly error for unique constraint violations
         if (error.message.includes("unique constraint") || error.message.includes("duplicate")) {
           throw new Error("En bil med detta registreringsnummer finns redan. Var vänlig ange ett unikt registreringsnummer eller lämna fältet tomt.");
@@ -93,11 +98,13 @@ export function useCreateCar() {
         throw new Error(error.message || "Kunde inte skapa fordonet");
       }
 
-      if (!data) {
-        throw new Error("Fordonet kunde inte skapas");
+      if (!data || !Array.isArray(data) || data.length === 0) {
+        console.error('No data returned from insert');
+        throw new Error("Fordonet kunde inte skapas - ingen data returnerades");
       }
 
-      return data;
+      console.log('Car created successfully:', data[0]);
+      return data[0];
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cars"] });
@@ -113,23 +120,29 @@ export function useUpdateCar() {
         throw new Error("Ogiltigt fordon-ID");
       }
 
+      console.log('Updating car:', { id, input });
+
       const payload = normalizeCarPayload(input);
       const { data, error } = await supabase
         .from("cars")
         .update(payload)
         .eq("id", id)
-        .select()
-        .single();
+        .select();
+
+      console.log('Update response:', { data, error });
 
       if (error) {
+        console.error('Update error:', error);
         throw new Error(error.message || "Kunde inte uppdatera fordonet");
       }
 
-      if (!data) {
+      if (!data || !Array.isArray(data) || data.length === 0) {
+        console.error('No data returned from update');
         throw new Error("Fordonet kunde inte hittas eller uppdateras");
       }
 
-      return data;
+      console.log('Car updated successfully:', data[0]);
+      return data[0];
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["cars"] });
@@ -146,12 +159,21 @@ export function useDeleteCar() {
         throw new Error("Ogiltigt fordon-ID");
       }
 
+      console.log('Deleting car:', id);
+
       const { error } = await supabase
         .from("cars")
         .delete()
         .eq("id", id);
 
-      if (error) throw new Error(error.message);
+      console.log('Delete response:', { error });
+
+      if (error) {
+        console.error('Delete error:', error);
+        throw new Error(error.message);
+      }
+
+      console.log('Car deleted successfully');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cars"] });
