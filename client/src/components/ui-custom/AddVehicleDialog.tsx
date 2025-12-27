@@ -72,10 +72,12 @@ export function AddVehicleDialog({ vehicleCount = 0 }: AddVehicleDialogProps) {
 
   const onSubmit = (data: FormValues) => {
     createCar(data, {
-      onSuccess: () => {
+      onSuccess: async () => {
         toast({ title: "Bil tillagd framgångsrikt!" });
         setOpen(false);
         form.reset();
+        // Give React Query a moment to refetch
+        await new Promise(resolve => setTimeout(resolve, 100));
       },
       onError: (error) => {
         toast({ 

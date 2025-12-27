@@ -11,9 +11,11 @@ import { PushNotificationPrompt } from "@/components/ui-custom/PushNotificationP
 
 export default function Dashboard() {
   const { logout, user } = useAuth();
-  const { data: cars, isLoading, error } = useCars();
+  const { data: cars, isLoading, error, refetch } = useCars();
   const [view, setView] = useState<'grid' | 'list'>('grid');
 
+  // Debug logging
+  console.log("Dashboard render - cars:", cars, "count:", cars?.length, "isLoading:", isLoading);
 
   if (isLoading) return <DashboardSkeleton />;
 
