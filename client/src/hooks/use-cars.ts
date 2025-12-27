@@ -176,7 +176,16 @@ export function useCreateCar() {
 
       console.log("Car created successfully! ID:", data.id, "user_id:", (data as any).user_id);
       
-      // Verify the car can be fetched immediately
+      // Verify the car can be fetched immediately (without user_id filter to test RLS)
+      const { data: verifyDataNoFilter, error: verifyErrorNoFilter } = await supabase
+        .from("cars")
+        .select("*")
+        .eq("id", data.id)
+        .maybeSingle();
+        
+      console.log("Verify car (no user_id filter):", verifyDataNoFilter ? "SUCCESS" : "FAILED", verifyErrorNoFilter);
+      
+      // Also verify with user_id filter
       const { data: verifyData, error: verifyError } = await supabase
         .from("cars")
         .select("*")
@@ -184,13 +193,22 @@ export function useCreateCar() {
         .eq("user_id", user.id)
         .maybeSingle();
         
+      console.log("Verify car (with user_id filter):", verifyData ? "SUCCESS" : "FAILED", verifyError);
+        
       if (verifyError) {
         console.error("Error verifying car after creation:", verifyError);
       } else if (!verifyData) {
-        console.error("WARNING: Car was created but cannot be fetched - likely RLS issue!");
+        console.error("WARNING: Car was created but cannot be fetched with user_id filter - RLS issue!");
       } else {
         console.log("Car verified - can be fetched successfully");
       }
+      
+      // Also test fetching ALL cars right after creation
+      const { data: allCarsTest, error: allCarsError } = await supabase
+        .from("cars")
+        .select("*");
+        
+      console.log("Test: All cars immediately after creation:", allCarsTest?.length || 0, allCarsError);
 
       return data as Car;
     },
