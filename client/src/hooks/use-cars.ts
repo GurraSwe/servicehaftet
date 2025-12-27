@@ -8,15 +8,19 @@ const toNullableString = (value?: string | null) => {
   return trimmed.length === 0 ? null : trimmed;
 };
 
-function normalizeCarPayload<T extends Partial<CarInput>>(input: T): T {
-  return {
-    ...input,
-    year: input.year ? Number(input.year) : input.year,
-    current_mileage: input.current_mileage !== undefined ? Number(input.current_mileage) : input.current_mileage,
-    vin: toNullableString(input.vin ?? null) as T["vin"],
-    license_plate: toNullableString(input.license_plate ?? null) as T["license_plate"],
-    notes: toNullableString(input.notes ?? null) as T["notes"],
-  };
+function normalizeCarPayload<T extends Partial<CarInput>>(input: T): any {
+  const payload: any = { ...input };
+
+  if (input.year) payload.year = Number(input.year);
+  if (input.current_mileage !== undefined) payload.current_mileage = Number(input.current_mileage);
+  if (input.service_interval_months !== undefined) payload.service_interval_months = input.service_interval_months ? Number(input.service_interval_months) : null;
+  if (input.service_interval_kilometers !== undefined) payload.service_interval_kilometers = input.service_interval_kilometers ? Number(input.service_interval_kilometers) : null;
+
+  payload.vin = toNullableString(input.vin);
+  payload.license_plate = toNullableString(input.license_plate);
+  payload.notes = toNullableString(input.notes);
+
+  return payload;
 }
 
 export function useCars() {
@@ -42,21 +46,16 @@ export function useCar(id: string | null | undefined) {
     queryKey: ["cars", id],
     queryFn: async (): Promise<Car | null> => {
       if (!id) return null;
-
       const { data, error } = await supabase
         .from("cars")
         .select("*")
         .eq("id", id)
         .maybeSingle();
 
-      if (error) {
-        console.error("Error fetching car:", error);
-        throw new Error(error.message);
-      }
+      if (error) throw new Error(error.message);
       return data;
     },
     enabled: !!id,
-    retry: false,
   });
 }
 
@@ -68,32 +67,17 @@ export function useCreateCar() {
       if (!user) throw new Error("Not authenticated");
 
       const payload = normalizeCarPayload(input);
-      const insertData = {
-        ...payload,
-        user_id: user.id,
-        license_plate: payload.license_plate || null,
-        vin: payload.vin || null,
-        notes: payload.notes || null,
-      };
+      payload.user_id = user.id;
 
-      console.log("Attempting insert:", insertData);
+      console.log("CREATING CAR:", payload);
 
       const { data, error } = await supabase
         .from("cars")
-        .insert(insertData)
+        .insert(payload)
         .select();
 
-      if (error) {
-        console.error("Insert error:", error);
-        if (error.message.includes("unique constraint") || error.message.includes("duplicate")) {
-          throw new Error("En bil med detta registreringsnummer finns redan.");
-        }
-        throw new Error(error.message || "Kunde inte skapa fordonet");
-      }
-
-      if (!data || data.length === 0) {
-        throw new Error("Fordonet kunde inte skapas (ingen data returnerades)");
-      }
+      if (error) throw new Error(error.message);
+      if (!data || data.length === 0) throw new Error("No data returned on create");
 
       return data[0];
     },
@@ -107,10 +91,10 @@ export function useUpdateCar() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...input }: { id: string } & Partial<CarInput>): Promise<Car> => {
-      if (!id) throw new Error("Ogiltigt fordon-ID");
+      if (!id) throw new Error("Missing ID");
 
       const payload = normalizeCarPayload(input);
-      console.log("Attempting update for ID:", id, payload);
+      console.log("UPDATING CAR:", id, payload);
 
       const { data, error } = await supabase
         .from("cars")
@@ -119,12 +103,12 @@ export function useUpdateCar() {
         .select();
 
       if (error) {
-        console.error("Update error:", error);
-        throw new Error(error.message || "Kunde inte uppdatera fordonet");
+        console.error("UPDATE ERROR:", error);
+        throw new Error(error.message);
       }
 
       if (!data || data.length === 0) {
-        throw new Error("Fordonet kunde inte hittas eller uppdateras. Kontrollera behörigheter.");
+        throw new Error("Update failed: No data returned. Check security policies.");
       }
 
       return data[0];
@@ -140,19 +124,13 @@ export function useDeleteCar() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string): Promise<void> => {
-      if (!id) throw new Error("Ogiltigt fordon-ID");
-
-      console.log("Attempting delete for ID:", id);
-
+      console.log("DELETING CAR:", id);
       const { error } = await supabase
         .from("cars")
         .delete()
         .eq("id", id);
 
-      if (error) {
-        console.error("Delete error:", error);
-        throw new Error(error.message);
-      }
+      if (error) throw new Error(error.message);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cars"] });
