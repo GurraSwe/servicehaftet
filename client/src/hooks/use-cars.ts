@@ -3,25 +3,45 @@ import { supabase } from "@/lib/supabase";
 import type { Car, CarInput } from "@/lib/types";
 
 // Helper function to clean data - convert empty strings to null
+// This is critical to avoid 409 conflicts with unique constraints
 function cleanCarData(data: any): any {
   const cleaned: any = { ...data };
   
-  // Convert empty strings to null for optional fields
-  if (cleaned.vin === "" || cleaned.vin === undefined) cleaned.vin = null;
-  if (cleaned.license_plate === "" || cleaned.license_plate === undefined) cleaned.license_plate = null;
-  if (cleaned.notes === "" || cleaned.notes === undefined) cleaned.notes = null;
-  
-  // Handle service interval fields - convert empty strings, undefined, or 0 to null
-  if (cleaned.service_interval_months === "" || cleaned.service_interval_months === undefined || cleaned.service_interval_months === 0) {
-    cleaned.service_interval_months = null;
-  } else if (typeof cleaned.service_interval_months === "string") {
-    cleaned.service_interval_months = parseInt(cleaned.service_interval_months, 10) || null;
+  // Convert empty strings to null for optional fields (critical for license_plate unique constraint)
+  // Empty strings are treated as values, NULL allows the unique constraint to work correctly
+  if (cleaned.vin === "" || cleaned.vin === undefined || cleaned.vin === null) {
+    cleaned.vin = null;
+  }
+  if (cleaned.license_plate === "" || cleaned.license_plate === undefined || cleaned.license_plate === null) {
+    cleaned.license_plate = null;
+  }
+  if (cleaned.notes === "" || cleaned.notes === undefined || cleaned.notes === null) {
+    cleaned.notes = null;
   }
   
-  if (cleaned.service_interval_kilometers === "" || cleaned.service_interval_kilometers === undefined || cleaned.service_interval_kilometers === 0) {
+  // Handle service interval fields - convert empty strings, undefined, 0, or null to null
+  if (
+    cleaned.service_interval_months === "" || 
+    cleaned.service_interval_months === undefined || 
+    cleaned.service_interval_months === null ||
+    cleaned.service_interval_months === 0
+  ) {
+    cleaned.service_interval_months = null;
+  } else if (typeof cleaned.service_interval_months === "string") {
+    const parsed = parseInt(cleaned.service_interval_months, 10);
+    cleaned.service_interval_months = isNaN(parsed) || parsed === 0 ? null : parsed;
+  }
+  
+  if (
+    cleaned.service_interval_kilometers === "" || 
+    cleaned.service_interval_kilometers === undefined || 
+    cleaned.service_interval_kilometers === null ||
+    cleaned.service_interval_kilometers === 0
+  ) {
     cleaned.service_interval_kilometers = null;
   } else if (typeof cleaned.service_interval_kilometers === "string") {
-    cleaned.service_interval_kilometers = parseInt(cleaned.service_interval_kilometers, 10) || null;
+    const parsed = parseInt(cleaned.service_interval_kilometers, 10);
+    cleaned.service_interval_kilometers = isNaN(parsed) || parsed === 0 ? null : parsed;
   }
   
   // Ensure year is a number
@@ -29,10 +49,20 @@ function cleanCarData(data: any): any {
     cleaned.year = parseInt(cleaned.year, 10);
   }
   
-  // Ensure current_mileage is a number
+  // Ensure current_mileage is a number (default to 0 if invalid)
   if (typeof cleaned.current_mileage === "string") {
     cleaned.current_mileage = parseInt(cleaned.current_mileage, 10) || 0;
   }
+  if (cleaned.current_mileage === undefined || cleaned.current_mileage === null) {
+    cleaned.current_mileage = 0;
+  }
+  
+  // Remove any undefined values (they can cause issues)
+  Object.keys(cleaned).forEach(key => {
+    if (cleaned[key] === undefined) {
+      delete cleaned[key];
+    }
+  });
   
   return cleaned;
 }
