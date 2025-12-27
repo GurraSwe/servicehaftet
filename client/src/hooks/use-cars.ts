@@ -189,16 +189,18 @@ export function useCreateCar() {
       return data as Car;
     },
     onSuccess: async (newCar) => {
-      console.log("Mutation success - invalidating queries");
+      console.log("Mutation success - resetting cars query");
       
       // Set individual car cache
       queryClient.setQueryData(["car", newCar.id], newCar);
       
-      // Invalidate and refetch the cars list
-      queryClient.invalidateQueries({ queryKey: ["cars"] });
-      await queryClient.refetchQueries({ queryKey: ["cars"] });
+      // Reset the query - this clears cache and forces fresh fetch on next use
+      await queryClient.resetQueries({ queryKey: ["cars"], exact: true });
       
-      console.log("Cars list invalidated and refetched");
+      // Also refetch immediately if query is active
+      await queryClient.refetchQueries({ queryKey: ["cars"], exact: true });
+      
+      console.log("Cars query reset and refetched");
     },
   });
 }
@@ -248,16 +250,18 @@ export function useUpdateCar() {
       return updatedCar;
     },
     onSuccess: async (updatedCar, variables) => {
-      console.log("Update success - invalidating queries");
+      console.log("Update success - resetting cars query");
       
       // Update individual car cache
       queryClient.setQueryData(["car", variables.id], updatedCar);
       
-      // Invalidate and refetch the cars list
-      queryClient.invalidateQueries({ queryKey: ["cars"] });
-      await queryClient.refetchQueries({ queryKey: ["cars"] });
+      // Reset the query - this clears cache and forces fresh fetch on next use
+      await queryClient.resetQueries({ queryKey: ["cars"], exact: true });
       
-      console.log("Cars list invalidated and refetched");
+      // Also refetch immediately if query is active
+      await queryClient.refetchQueries({ queryKey: ["cars"], exact: true });
+      
+      console.log("Cars query reset and refetched");
     },
   });
 }
@@ -288,16 +292,18 @@ export function useDeleteCar() {
       return id;
     },
     onSuccess: async (deletedId) => {
-      console.log("Delete success - invalidating queries");
+      console.log("Delete success - resetting cars query");
       
       // Remove individual car cache
-      queryClient.removeQueries({ queryKey: ["car", deletedId] });
+      queryClient.removeQueries({ queryKey: ["car", deletedId], exact: true });
       
-      // Invalidate and refetch the cars list
-      queryClient.invalidateQueries({ queryKey: ["cars"] });
-      await queryClient.refetchQueries({ queryKey: ["cars"] });
+      // Reset the query - this clears cache and forces fresh fetch on next use
+      await queryClient.resetQueries({ queryKey: ["cars"], exact: true });
       
-      console.log("Cars list invalidated and refetched");
+      // Also refetch immediately if query is active
+      await queryClient.refetchQueries({ queryKey: ["cars"], exact: true });
+      
+      console.log("Cars query reset and refetched");
     },
   });
 }

@@ -29,6 +29,22 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
+  const url = new URL(event.request.url);
+  
+  // Don't cache API requests (Supabase, external APIs, etc.)
+  // Only cache static assets (HTML, CSS, JS, images, etc.)
+  const isAPIRequest = url.pathname.includes('/rest/v1/') || 
+                       url.pathname.includes('/auth/v1/') ||
+                       url.hostname.includes('supabase.co') ||
+                       url.hostname.includes('supabase.com');
+  
+  if (isAPIRequest) {
+    // For API requests, always fetch from network (no caching)
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // For static assets, use cache-first strategy
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
