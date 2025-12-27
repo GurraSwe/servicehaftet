@@ -75,15 +75,23 @@ export function useCars() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
+      console.log("Fetching cars for user:", user.id);
+
       const { data, error } = await supabase
         .from("cars")
         .select("*")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
-      return data as Car[];
+      if (error) {
+        console.error("Error fetching cars:", error);
+        throw error;
+      }
+      
+      console.log("Fetched cars from database:", data);
+      return (data || []) as Car[];
     },
+    staleTime: 0, // Always consider data stale to ensure fresh fetches after mutations
   });
 }
 
@@ -146,15 +154,17 @@ export function useCreateCar() {
 
       console.log("Car created successfully:", data);
       
-      // Invalidate and refetch immediately
-      queryClient.invalidateQueries({ queryKey: ["cars"] });
-      queryClient.setQueryData(["car", data.id], data);
-      
       return data as Car;
     },
-    onSuccess: () => {
-      // Force refetch of cars list
+    onSuccess: (newCar) => {
+      console.log("Mutation success - new car ID:", newCar.id);
+      
+      // Invalidate and refetch the cars list
+      // This ensures the UI updates with the latest data from the server
       queryClient.invalidateQueries({ queryKey: ["cars"] });
+      
+      // Also set individual car cache for immediate access
+      queryClient.setQueryData(["car", newCar.id], newCar);
     },
   });
 }

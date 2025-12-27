@@ -14,6 +14,11 @@ export default function Dashboard() {
   const { data: cars, isLoading, error } = useCars();
   const [view, setView] = useState<'grid' | 'list'>('grid');
 
+  // Debug logging
+  console.log("Dashboard - cars data:", cars);
+  console.log("Dashboard - isLoading:", isLoading);
+  console.log("Dashboard - error:", error);
+
   if (isLoading) return <DashboardSkeleton />;
 
   return (
