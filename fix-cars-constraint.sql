@@ -1,7 +1,7 @@
--- Run this SQL in your Supabase SQL Editor to fix the license_plate unique constraint
--- This makes the constraint allow NULL values (multiple NULLs don't violate unique constraints)
+-- Complete fix for the cars table and related constraints
+-- Run this in your Supabase SQL Editor
 
--- Step 1: Drop the existing constraint/index if it exists (try both methods)
+-- Step 1: Drop the existing unique constraint/index if it exists
 DO $$ 
 BEGIN
     -- Try to drop as a constraint
@@ -23,13 +23,25 @@ END $$;
 
 -- Step 2: Clean up any existing cars with empty string license_plates (convert to NULL)
 UPDATE cars SET license_plate = NULL WHERE license_plate = '';
+UPDATE cars SET vin = NULL WHERE vin = '';
+UPDATE cars SET notes = NULL WHERE notes = '';
 
 -- Step 3: Recreate the constraint as a partial unique index (allows multiple NULLs)
 -- This ensures users can have multiple cars without license plates, but not duplicate plates
-CREATE UNIQUE INDEX cars_user_plate_unique 
+CREATE UNIQUE INDEX IF NOT EXISTS cars_user_plate_unique 
 ON cars(user_id, license_plate) 
 WHERE license_plate IS NOT NULL;
 
--- Note: This creates a partial unique index that only applies when license_plate is NOT NULL
--- Multiple NULL values are allowed (since they're excluded from the index)
+-- Step 4: Verify the table structure
+-- This will show you the current structure of the cars table
+SELECT 
+    column_name, 
+    data_type, 
+    is_nullable,
+    column_default
+FROM information_schema.columns
+WHERE table_name = 'cars'
+ORDER BY ordinal_position;
 
+-- Note: The id column should be 'integer' type (from SERIAL)
+-- If you see any issues, the table might need to be recreated

@@ -29,27 +29,28 @@ export function useCars() {
         .from("cars")
         .select("*")
         .order("created_at", { ascending: false });
-      
+
       if (error) throw new Error(error.message);
       return data || [];
     },
   });
 }
 
-export function useCar(id: string | null | undefined) {
-  const validId = id && id.trim() !== "" ? id : null;
-  
+export function useCar(id: string | number | null | undefined) {
+  const validId = id ? (typeof id === 'string' ? parseInt(id, 10) : id) : null;
+  const isValidNumber = validId !== null && !isNaN(validId);
+
   return useQuery({
     queryKey: ["cars", validId],
     queryFn: async (): Promise<Car | null> => {
-      if (!validId) return null;
-      
+      if (!isValidNumber) return null;
+
       const { data, error } = await supabase
         .from("cars")
         .select("*")
         .eq("id", validId)
         .single();
-      
+
       if (error) {
         // PGRST116 = no rows returned, 22P02 = invalid input syntax (e.g. malformed ID)
         if (error.code === "PGRST116" || error.code === "22P02") return null;
@@ -57,7 +58,7 @@ export function useCar(id: string | null | undefined) {
       }
       return data;
     },
-    enabled: !!validId,
+    enabled: isValidNumber,
     retry: false,
   });
 }
@@ -68,7 +69,7 @@ export function useCreateCar() {
     mutationFn: async (input: CarInput): Promise<Car> => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
-      
+
       const payload = normalizeCarPayload(input);
       // Ensure license_plate is explicitly null if empty to avoid unique constraint violations
       const insertData = {
@@ -81,8 +82,9 @@ export function useCreateCar() {
       const { data, error } = await supabase
         .from("cars")
         .insert(insertData)
-        .select();
-      
+        .select()
+        .single();
+
       if (error) {
         // Provide a more user-friendly error for unique constraint violations
         if (error.message.includes("unique constraint") || error.message.includes("duplicate")) {
@@ -90,12 +92,12 @@ export function useCreateCar() {
         }
         throw new Error(error.message || "Kunde inte skapa fordonet");
       }
-      
-      if (!data || data.length === 0) {
+
+      if (!data) {
         throw new Error("Fordonet kunde inte skapas");
       }
-      
-      return data[0];
+
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cars"] });
@@ -106,31 +108,28 @@ export function useCreateCar() {
 export function useUpdateCar() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...input }: { id: string } & Partial<CarInput>): Promise<Car> => {
+    mutationFn: async ({ id, ...input }: { id: number | string } & Partial<CarInput>): Promise<Car> => {
       if (!id) {
         throw new Error("Ogiltigt fordon-ID");
       }
-      
+
       const payload = normalizeCarPayload(input);
       const { data, error } = await supabase
         .from("cars")
         .update(payload)
         .eq("id", id)
-        .select();
-      
+        .select()
+        .single();
+
       if (error) {
         throw new Error(error.message || "Kunde inte uppdatera fordonet");
       }
-      
-      if (!data || data.length === 0) {
+
+      if (!data) {
         throw new Error("Fordonet kunde inte hittas eller uppdateras");
       }
-      
-      if (data.length > 1) {
-        console.warn("Multiple cars returned for single ID:", id);
-      }
-      
-      return data[0];
+
+      return data;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["cars"] });
@@ -142,16 +141,16 @@ export function useUpdateCar() {
 export function useDeleteCar() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string): Promise<void> => {
+    mutationFn: async (id: number | string): Promise<void> => {
       if (!id) {
         throw new Error("Ogiltigt fordon-ID");
       }
-      
+
       const { error } = await supabase
         .from("cars")
         .delete()
         .eq("id", id);
-      
+
       if (error) throw new Error(error.message);
     },
     onSuccess: () => {
