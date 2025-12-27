@@ -2,108 +2,141 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import type { Reminder, ReminderInput } from "@/lib/types";
 
-export function useReminders(carId: string | null | undefined) {
+// Fetch all reminders for a car
+export function useReminders(carId: string | null) {
   return useQuery({
     queryKey: ["reminders", carId],
-    queryFn: async (): Promise<Reminder[]> => {
+    queryFn: async () => {
       if (!carId) return [];
 
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const id = typeof carId === "string" ? parseInt(carId, 10) : carId;
+      if (isNaN(id)) throw new Error("Invalid car ID");
+
       const { data, error } = await supabase
         .from("reminders")
         .select("*")
-        .eq("car_id", carId)
+        .eq("car_id", id)
+        .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
-      if (error) throw new Error(error.message);
-      return data || [];
+      if (error) throw error;
+      return (data || []) as Reminder[];
     },
     enabled: !!carId,
-    retry: false,
   });
 }
 
-export function useAllReminders() {
-  return useQuery({
-    queryKey: ["reminders", "all"],
-    queryFn: async (): Promise<Reminder[]> => {
+// Create a new reminder
+export function useCreateReminder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: ReminderInput) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const reminderData = {
+        ...input,
+        user_id: user.id,
+        recurring: input.recurring ?? false,
+        is_completed: input.is_completed ?? false,
+        notes: input.notes || null,
+        due_date: input.due_date || null,
+        due_mileage: input.due_mileage || null,
+        interval_months: input.interval_months || null,
+        interval_kilometers: input.interval_kilometers || null,
+      };
+
       const { data, error } = await supabase
         .from("reminders")
-        .select("*")
-        .order("due_date", { ascending: true });
+        .insert(reminderData)
+        .select()
+        .single();
 
-      if (error) throw new Error(error.message);
-      return data || [];
+      if (error) throw error;
+      return data as Reminder;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["reminders", variables.car_id.toString()] });
     },
   });
 }
 
-export function useCreateReminder() {
+// Update a reminder
+export function useUpdateReminder() {
   const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: async (input: ReminderInput): Promise<Reminder> => {
+    mutationFn: async ({ id, ...input }: ReminderInput & { id: number }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
       const { data, error } = await supabase
         .from("reminders")
-        .insert({
-          ...input,
-          user_id: user.id,
-          recurring: input.recurring ?? false,
-          is_completed: false,
-        })
-        .select()
-        .maybeSingle();
-
-      if (error) throw new Error(error.message);
-      if (!data) throw new Error("Failed to create reminder");
-
-      return data;
-    },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["reminders", variables.car_id] });
-      queryClient.invalidateQueries({ queryKey: ["reminders", "all"] });
-    },
-  });
-}
-
-export function useUpdateReminder() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ id, carId, ...input }: { id: string; carId: string } & Partial<ReminderInput> & { is_completed?: boolean }): Promise<Reminder> => {
-      const { data, error } = await supabase
-        .from("reminders")
         .update(input)
         .eq("id", id)
+        .eq("user_id", user.id)
         .select()
-        .maybeSingle();
+        .single();
 
-      if (error) throw new Error(error.message);
-      if (!data) throw new Error("Failed to update reminder");
-
-      return data;
+      if (error) throw error;
+      return data as Reminder;
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["reminders", variables.carId] });
-      queryClient.invalidateQueries({ queryKey: ["reminders", "all"] });
+      queryClient.invalidateQueries({ queryKey: ["reminders"] });
     },
   });
 }
 
+// Delete a reminder
 export function useDeleteReminder() {
   const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: async ({ id, carId }: { id: string; carId: string }): Promise<void> => {
+    mutationFn: async (id: number) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
       const { error } = await supabase
         .from("reminders")
         .delete()
-        .eq("id", id);
+        .eq("id", id)
+        .eq("user_id", user.id);
 
-      if (error) throw new Error(error.message);
+      if (error) throw error;
     },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["reminders", variables.carId] });
-      queryClient.invalidateQueries({ queryKey: ["reminders", "all"] });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["reminders"] });
     },
   });
 }
+
+// Mark a reminder as completed
+export function useCompleteReminder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const { data, error } = await supabase
+        .from("reminders")
+        .update({ is_completed: true })
+        .eq("id", id)
+        .eq("user_id", user.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data as Reminder;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["reminders"] });
+    },
+  });
+}
+
