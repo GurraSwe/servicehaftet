@@ -257,56 +257,29 @@ export function AddVehicleDialog({ vehicleCount = 0 }: AddVehicleDialogProps) {
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="service_interval_months"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Serviceintervall (månader)</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        placeholder="t.ex. 12" 
-                        value={field.value ?? ''} 
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          field.onChange(val === '' ? null : Number(val));
-                        }}
-                        onBlur={field.onBlur}
-                        name={field.name}
-                        ref={field.ref}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="service_interval_kilometers"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Serviceintervall (km)</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        placeholder="t.ex. 15000" 
-                        value={field.value ?? ''} 
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          field.onChange(val === '' ? null : Number(val));
-                        }}
-                        onBlur={field.onBlur}
-                        name={field.name}
-                        ref={field.ref}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="last_inspection_date"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Senaste besiktning (datum)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="date" 
+                      value={field.value ?? ''} 
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        field.onChange(val === '' ? null : val);
+                      }}
+                      onBlur={field.onBlur}
+                      name={field.name}
+                      ref={field.ref}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}
