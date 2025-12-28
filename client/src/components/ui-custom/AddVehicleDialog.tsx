@@ -35,8 +35,7 @@ const formSchema = z.object({
   current_mileage: z.coerce.number().min(0),
   vin: z.string().optional().nullable(),
   license_plate: z.string().optional().nullable(),
-  service_interval_months: z.coerce.number().min(0).optional().nullable(),
-  service_interval_kilometers: z.coerce.number().min(0).optional().nullable(),
+  last_inspection_date: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
 });
 
@@ -64,8 +63,7 @@ export function AddVehicleDialog({ vehicleCount = 0 }: AddVehicleDialogProps) {
       vin: "",
       license_plate: "",
       current_mileage: 0,
-      service_interval_months: null,
-      service_interval_kilometers: null,
+      last_inspection_date: null,
       notes: "",
     },
   });

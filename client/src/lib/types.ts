@@ -10,8 +10,7 @@ export interface Car {
   vin: string | null;
   license_plate: string | null;
   current_mileage: number;
-  service_interval_months: number | null;
-  service_interval_kilometers: number | null;
+  last_inspection_date: string | null; // Date in YYYY-MM-DD format
   notes: string | null;
   created_at: string;
 }
@@ -24,8 +23,7 @@ export interface CarInput {
   vin?: string | null;
   license_plate?: string | null;
   current_mileage: number;
-  service_interval_months?: number | null;
-  service_interval_kilometers?: number | null;
+  last_inspection_date?: string | null; // Date in YYYY-MM-DD format
   notes?: string | null;
 }
 

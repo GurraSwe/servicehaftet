@@ -37,8 +37,7 @@ const formSchema = z.object({
   current_mileage: z.coerce.number().min(0),
   vin: z.string().optional().nullable(),
   license_plate: z.string().optional().nullable(),
-  service_interval_months: z.coerce.number().min(0).optional().nullable(),
-  service_interval_kilometers: z.coerce.number().min(0).optional().nullable(),
+  last_inspection_date: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
 });
 
@@ -65,8 +64,7 @@ export function EditVehicleDialog({ vehicle }: EditVehicleDialogProps) {
       vin: vehicle.vin || "",
       license_plate: vehicle.license_plate || "",
       current_mileage: vehicle.current_mileage || 0,
-      service_interval_months: vehicle.service_interval_months || null,
-      service_interval_kilometers: vehicle.service_interval_kilometers || null,
+      last_inspection_date: vehicle.last_inspection_date || null,
       notes: vehicle.notes || "",
     },
   });
@@ -224,56 +222,29 @@ export function EditVehicleDialog({ vehicle }: EditVehicleDialogProps) {
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="service_interval_months"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Serviceintervall (månader)</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        placeholder="t.ex. 12" 
-                        value={field.value ?? ''} 
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          field.onChange(val === '' ? null : Number(val));
-                        }}
-                        onBlur={field.onBlur}
-                        name={field.name}
-                        ref={field.ref}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="service_interval_kilometers"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Serviceintervall (km)</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        placeholder="t.ex. 15000" 
-                        value={field.value ?? ''} 
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          field.onChange(val === '' ? null : Number(val));
-                        }}
-                        onBlur={field.onBlur}
-                        name={field.name}
-                        ref={field.ref}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="last_inspection_date"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Senaste besiktning (datum)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="date" 
+                      value={field.value ?? ''} 
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        field.onChange(val === '' ? null : val);
+                      }}
+                      onBlur={field.onBlur}
+                      name={field.name}
+                      ref={field.ref}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}

@@ -19,29 +19,9 @@ function cleanCarData(data: any): any {
     cleaned.notes = null;
   }
   
-  // Handle service interval fields - convert empty strings, undefined, 0, or null to null
-  if (
-    cleaned.service_interval_months === "" || 
-    cleaned.service_interval_months === undefined || 
-    cleaned.service_interval_months === null ||
-    cleaned.service_interval_months === 0
-  ) {
-    cleaned.service_interval_months = null;
-  } else if (typeof cleaned.service_interval_months === "string") {
-    const parsed = parseInt(cleaned.service_interval_months, 10);
-    cleaned.service_interval_months = isNaN(parsed) || parsed === 0 ? null : parsed;
-  }
-  
-  if (
-    cleaned.service_interval_kilometers === "" || 
-    cleaned.service_interval_kilometers === undefined || 
-    cleaned.service_interval_kilometers === null ||
-    cleaned.service_interval_kilometers === 0
-  ) {
-    cleaned.service_interval_kilometers = null;
-  } else if (typeof cleaned.service_interval_kilometers === "string") {
-    const parsed = parseInt(cleaned.service_interval_kilometers, 10);
-    cleaned.service_interval_kilometers = isNaN(parsed) || parsed === 0 ? null : parsed;
+  // Handle last_inspection_date - convert empty strings to null
+  if (cleaned.last_inspection_date === "" || cleaned.last_inspection_date === undefined) {
+    cleaned.last_inspection_date = null;
   }
   
   // Ensure year is a number

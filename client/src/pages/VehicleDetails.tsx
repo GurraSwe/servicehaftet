@@ -10,9 +10,10 @@ import { EditVehicleDialog } from "@/components/ui-custom/EditVehicleDialog";
 import { ServiceItem } from "@/components/ui-custom/ServiceItem";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format } from "date-fns";
 import { sv as svSE } from "date-fns/locale";
 import type { ServiceLog } from "@/lib/types";
+import { calculateNextInspectionDate, formatInspectionDate, getDaysUntilInspection } from "@/lib/inspection-utils";
 
 export default function VehicleDetails() {
   const { id } = useParams<{ id: string }>();
@@ -138,23 +139,31 @@ export default function VehicleDetails() {
 
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Serviceintervall</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Senaste besiktning</CardTitle>
             </CardHeader>
             <CardContent>
-              {vehicle.service_interval_months || vehicle.service_interval_kilometers ? (
-                <div className="text-lg font-bold">
-                  {vehicle.service_interval_months && vehicle.service_interval_kilometers ? (
-                    <>
-                      {vehicle.service_interval_months} mån / {vehicle.service_interval_kilometers.toLocaleString('sv-SE')} km
-                    </>
-                  ) : vehicle.service_interval_months ? (
-                    <>{vehicle.service_interval_months} månader</>
-                  ) : (
-                    <>{vehicle.service_interval_kilometers?.toLocaleString('sv-SE')} km</>
-                  )}
+              {vehicle.last_inspection_date ? (
+                <div>
+                  <div className="text-lg font-bold">
+                    {formatInspectionDate(vehicle.last_inspection_date)}
+                  </div>
+                  {(() => {
+                    const nextDate = calculateNextInspectionDate(vehicle.last_inspection_date);
+                    const daysUntil = nextDate ? getDaysUntilInspection(nextDate) : null;
+                    return nextDate ? (
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Nästa besiktning: {formatInspectionDate(nextDate)}
+                        {daysUntil !== null && (
+                          <span className={daysUntil <= 7 ? " text-destructive font-semibold" : ""}>
+                            {" "}({daysUntil > 0 ? `Om ${daysUntil} dagar` : daysUntil === 0 ? "Idag" : `Försenad med ${Math.abs(daysUntil)} dagar`})
+                          </span>
+                        )}
+                      </div>
+                    ) : null;
+                  })()}
                 </div>
               ) : (
-                <div className="text-muted-foreground italic">Ej inställt</div>
+                <div className="text-muted-foreground italic">Ej angivet</div>
               )}
             </CardContent>
           </Card>
