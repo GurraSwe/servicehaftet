@@ -11,6 +11,34 @@ export function registerPWA() {
       .register("/service-worker.js", { scope: "/" })
       .then((registration) => {
         console.log("Service worker registered successfully:", registration.scope);
+        
+        // Check for updates immediately and periodically
+        checkForUpdates(registration);
+        
+        // Listen for service worker updates
+        registration.addEventListener("updatefound", () => {
+          console.log("New service worker found, installing...");
+          const newWorker = registration.installing;
+          
+          if (newWorker) {
+            newWorker.addEventListener("statechange", () => {
+              if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+                // New service worker is ready, reload to activate it
+                console.log("New service worker installed, reloading page...");
+                window.location.reload();
+              }
+            });
+          }
+        });
+        
+        // Listen for messages from service worker
+        navigator.serviceWorker.addEventListener("message", (event) => {
+          if (event.data && event.data.type === "SW_UPDATED") {
+            console.log("Service worker updated, reloading page...");
+            window.location.reload();
+          }
+        });
+        
         return registration;
       })
       .catch((error) => {
@@ -28,6 +56,28 @@ export function registerPWA() {
   ]).then((result) => {
     // Always return null if timeout wins, or the registration result
     return result || null;
+  });
+}
+
+// Check for service worker updates periodically
+function checkForUpdates(registration: ServiceWorkerRegistration) {
+  // Check immediately
+  registration.update();
+  
+  // Check every 60 seconds for updates
+  setInterval(() => {
+    registration.update().catch((error) => {
+      console.error("Failed to check for service worker updates:", error);
+    });
+  }, 60000);
+  
+  // Also check when page becomes visible (user returns to tab)
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) {
+      registration.update().catch((error) => {
+        console.error("Failed to check for service worker updates:", error);
+      });
+    }
   });
 }
 

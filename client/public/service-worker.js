@@ -1,4 +1,7 @@
-const CACHE_NAME = "servicehaftet-cache-v1";
+// Cache version - increment this on each deploy to force cache invalidation
+// The network-first strategy for HTML/JS files ensures fresh content, but this helps clear old caches
+const CACHE_VERSION = "v2";
+const CACHE_NAME = `servicehaftet-cache-${CACHE_VERSION}`;
 const PRECACHE_URLS = [
   "/",
   "/index.html",
@@ -7,23 +10,48 @@ const PRECACHE_URLS = [
 ];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_URLS)),
-  );
+  console.log("Service worker installing with cache:", CACHE_NAME);
+  // Force immediate activation of new service worker
   self.skipWaiting();
+  
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(PRECACHE_URLS).catch((error) => {
+        console.error("Failed to precache some URLs:", error);
+      });
+    })
+  );
 });
 
 self.addEventListener("activate", (event) => {
+  console.log("Service worker activating, clearing old caches");
+  
   event.waitUntil(
-    caches.keys().then((cacheNames) =>
-      Promise.all(
-        cacheNames
-          .filter((name) => name !== CACHE_NAME)
-          .map((name) => caches.delete(name)),
-      ),
-    ),
+    Promise.all([
+      // Delete ALL old caches (not just ones that don't match current name)
+      caches.keys().then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((name) => {
+            if (name !== CACHE_NAME) {
+              console.log("Deleting old cache:", name);
+              return caches.delete(name);
+            }
+          })
+        );
+      }),
+      // Immediately take control of all clients
+      self.clients.claim(),
+      // Notify all clients that a new service worker is active
+      self.clients.matchAll().then((clients) => {
+        clients.forEach((client) => {
+          client.postMessage({
+            type: "SW_UPDATED",
+            cacheName: CACHE_NAME,
+          });
+        });
+      }),
+    ])
   );
-  self.clients.claim();
 });
 
 self.addEventListener("fetch", (event) => {
@@ -53,7 +81,48 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // For static assets, use cache-first strategy with network fallback
+  // For HTML and JS files, use NETWORK-FIRST strategy to always get latest version
+  // For other static assets (images, fonts), use cache-first
+  const isHTML = event.request.mode === "navigate" || 
+                 event.request.headers.get("accept")?.includes("text/html");
+  const isJS = event.request.url.endsWith(".js") || 
+               event.request.url.includes("/src/") ||
+               event.request.url.includes("/assets/");
+
+  if (isHTML || isJS) {
+    // NETWORK-FIRST: Always try network first, fallback to cache only if offline
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          // If we got a fresh response, update cache
+          if (response && response.status === 200 && response.type !== "opaque") {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseClone).catch((error) => {
+                console.error("Service worker: Failed to cache response:", error);
+              });
+            });
+          }
+          return response;
+        })
+        .catch(() => {
+          // Network failed, try cache as fallback
+          return caches.match(event.request).then((cachedResponse) => {
+            if (cachedResponse) {
+              return cachedResponse;
+            }
+            // If it's a navigation request and we have no cache, return index.html
+            if (isHTML) {
+              return caches.match("/index.html");
+            }
+            throw new Error("Network failed and no cache available");
+          });
+        })
+    );
+    return;
+  }
+
+  // For other static assets (images, fonts, CSS), use cache-first
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
@@ -74,16 +143,6 @@ self.addEventListener("fetch", (event) => {
         })
         .catch((error) => {
           console.error("Service worker: Fetch failed:", error);
-          // For navigation requests, try to return cached index.html
-          if (event.request.mode === "navigate") {
-            return caches.match("/index.html").then((cachedIndex) => {
-              return cachedIndex || new Response("Network error. Please check your connection.", {
-                status: 503,
-                headers: { "Content-Type": "text/plain" },
-              });
-            });
-          }
-          // For other requests, return the error
           throw error;
         });
     }),

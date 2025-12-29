@@ -18,15 +18,24 @@ root.render(
   </ErrorBoundary>
 );
 
-// Register service worker with error handling
-if (import.meta.env.PROD) {
+// Register service worker with error handling and auto-update
+if ("serviceWorker" in navigator) {
+  // Register immediately (don't wait for load event)
   registerPWA().catch((error) => {
-    console.error("Failed to register service worker in production:", error);
+    console.error("Failed to register service worker:", error);
   });
-} else if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    registerPWA().catch((error) => {
-      console.error("Failed to register service worker in development:", error);
-    });
+  
+  // Listen for controller changes (when new service worker takes control)
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    console.log("Service worker controller changed, reloading...");
+    window.location.reload();
+  });
+  
+  // Listen for service worker messages
+  navigator.serviceWorker.addEventListener("message", (event) => {
+    if (event.data && event.data.type === "SW_UPDATED") {
+      console.log("Service worker updated, reloading page...");
+      window.location.reload();
+    }
   });
 }
