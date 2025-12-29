@@ -40,11 +40,20 @@ self.addEventListener("fetch", (event) => {
   
   if (isAPIRequest) {
     // For API requests, always fetch from network (no caching)
-    event.respondWith(fetch(event.request));
+    event.respondWith(
+      fetch(event.request).catch((error) => {
+        console.error("Service worker: API fetch failed:", error);
+        // Return a proper error response instead of failing silently
+        return new Response(JSON.stringify({ error: "Network request failed" }), {
+          status: 503,
+          headers: { "Content-Type": "application/json" },
+        });
+      })
+    );
     return;
   }
 
-  // For static assets, use cache-first strategy
+  // For static assets, use cache-first strategy with network fallback
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
@@ -52,16 +61,31 @@ self.addEventListener("fetch", (event) => {
       }
       return fetch(event.request)
         .then((response) => {
-          if (!response || response.status !== 200 || response.type === "opaque") {
-            return response;
+          // Only cache successful responses
+          if (response && response.status === 200 && response.type !== "opaque") {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseClone).catch((error) => {
+                console.error("Service worker: Failed to cache response:", error);
+              });
+            });
           }
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
-          });
           return response;
         })
-        .catch(() => caches.match("/index.html"));
+        .catch((error) => {
+          console.error("Service worker: Fetch failed:", error);
+          // For navigation requests, try to return cached index.html
+          if (event.request.mode === "navigate") {
+            return caches.match("/index.html").then((cachedIndex) => {
+              return cachedIndex || new Response("Network error. Please check your connection.", {
+                status: 503,
+                headers: { "Content-Type": "text/plain" },
+              });
+            });
+          }
+          // For other requests, return the error
+          throw error;
+        });
     }),
   );
 });

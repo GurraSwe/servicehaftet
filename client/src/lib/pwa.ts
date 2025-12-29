@@ -5,12 +5,30 @@ export function registerPWA() {
     return Promise.resolve(null);
   }
 
-  return navigator.serviceWorker
-    .register("/service-worker.js")
-    .catch((error) => {
-      console.error("Service worker registration failed:", error);
-      return null;
-    });
+  // Use a timeout to prevent service worker registration from blocking app load
+  return Promise.race([
+    navigator.serviceWorker
+      .register("/service-worker.js", { scope: "/" })
+      .then((registration) => {
+        console.log("Service worker registered successfully:", registration.scope);
+        return registration;
+      })
+      .catch((error) => {
+        console.error("Service worker registration failed:", error);
+        // Don't throw - allow app to continue without service worker
+        return null;
+      }),
+    new Promise((resolve) => {
+      // Timeout after 3 seconds - don't block app loading
+      setTimeout(() => {
+        console.warn("Service worker registration timed out");
+        resolve(null);
+      }, 3000);
+    }),
+  ]).then((result) => {
+    // Always return null if timeout wins, or the registration result
+    return result || null;
+  });
 }
 
 export async function requestBrowserNotificationPermission() {
