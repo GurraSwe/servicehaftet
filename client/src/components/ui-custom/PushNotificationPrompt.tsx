@@ -21,7 +21,7 @@ export function PushNotificationPrompt({ variant = "card" }: { variant?: Variant
         <AlertTriangle className="w-5 h-5 text-accent" />
         <div>
           <p className="font-semibold">Pushnotiser blockerade</p>
-          <p>Uppdatera webbläsarens inställningar för att tillåta servicepåminnelser.</p>
+          <p>Uppdatera webbläsarens inställningar för att tillåta besiktningspåminnelser.</p>
         </div>
       </div>
     );
@@ -39,9 +39,9 @@ export function PushNotificationPrompt({ variant = "card" }: { variant?: Variant
           <Bell className="w-5 h-5" />
         </div>
         <div>
-          <p className="font-display font-semibold text-lg">Aktivera servicepåminnelser</p>
+          <p className="font-display font-semibold text-lg">Aktivera besiktningspåminnelser</p>
           <p className="text-muted-foreground text-sm">
-            Få en pushnotis när det är dags för nästa service. Tillgängligt på Android och Chrome.
+            Få en pushnotis när det är dags för besiktning. Tillgängligt på Android och Chrome.
           </p>
           <div className="mt-2 text-xs text-muted-foreground">
             <span>Vi delar aldrig data med tredje part. Läs mer i </span>

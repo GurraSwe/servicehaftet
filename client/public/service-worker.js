@@ -151,8 +151,8 @@ self.addEventListener("fetch", (event) => {
 
 self.addEventListener("push", (event) => {
   const data = event.data ? event.data.json() : {};
-  const title = data.title || "ServiceHäftet";
-  const body = data.body || "Du har en ny servicepåminnelse.";
+  const title = data.title || "Besiktningspåminnelse";
+  const body = data.body || "Det är snart dags för besiktning. Glöm inte att boka i tid.";
   const url = data.url || "/dashboard";
 
   event.waitUntil(

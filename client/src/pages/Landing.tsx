@@ -57,8 +57,8 @@ export default function Landing() {
                 Ditt digitala <span className="text-gradient">servicehäfte</span>
               </h1>
               <p className="text-xl text-muted-foreground mb-10 leading-relaxed max-w-2xl mx-auto">
-                Håll koll på bilens underhåll och körsträcka och få automatiska servicepåminnelser.
-                All servicehistorik samlad på ett och samma ställe – enkelt och smidigt.
+                Håll koll på bilens besiktning och servicehistorik.
+                Få automatiska påminnelser när det är dags för besiktning.
               </p>
               
               <div className="flex flex-col sm:flex-row justify-center gap-4">
@@ -105,8 +105,8 @@ export default function Landing() {
                 </div>
                 <h3 className="text-xl font-bold font-display mb-3">Smarta påminnelser</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  Ställ in påminnelser baserade på datum eller miltal.
-                  Du blir automatiskt påmind när det är dags för nästa service eller underhåll.
+                  Håll koll på bilens besiktning och servicehistorik.
+                  Få automatiska påminnelser när det är dags för besiktning.
                 </p>
               </div>
 
