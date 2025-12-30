@@ -2,7 +2,7 @@ import { addMonths, format, parseISO, isValid } from "date-fns";
 import { sv as svSE } from "date-fns/locale";
 
 /**
- * Calculate the next inspection date based on last inspection date + 13 months
+ * Calculate the next inspection date based on last inspection date + 14 months
  * @param lastInspectionDate - Date string in YYYY-MM-DD format or null
  * @returns Date string in YYYY-MM-DD format or null
  */
@@ -13,7 +13,7 @@ export function calculateNextInspectionDate(lastInspectionDate: string | null): 
     const date = parseISO(lastInspectionDate);
     if (!isValid(date)) return null;
     
-    const nextDate = addMonths(date, 13);
+    const nextDate = addMonths(date, 14);
     return format(nextDate, "yyyy-MM-dd");
   } catch (error) {
     console.error("Error calculating next inspection date:", error);

@@ -22,7 +22,7 @@ This Supabase Edge Function checks for cars with upcoming inspections and sends 
 ## How it works
 
 1. Queries all cars with `last_inspection_date` set
-2. Calculates `next_inspection_date` (last_inspection_date + 13 months)
+2. Calculates `next_inspection_date` (last_inspection_date + 14 months)
 3. Finds cars where inspection is due in 7 days or today
 4. Fetches push subscriptions for those users
 5. Sends push notifications with Swedish text

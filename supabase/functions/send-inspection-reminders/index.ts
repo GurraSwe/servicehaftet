@@ -27,15 +27,15 @@ interface Car {
   last_inspection_date: string | null;
 }
 
-// Calculate next inspection date (last_inspection_date + 13 months)
+// Calculate next inspection date (last_inspection_date + 14 months)
 function calculateNextInspectionDate(lastInspectionDate: string | null): Date | null {
   if (!lastInspectionDate) return null;
   
   const date = new Date(lastInspectionDate);
   if (isNaN(date.getTime())) return null;
   
-  // Add 13 months
-  date.setMonth(date.getMonth() + 13);
+  // Add 14 months
+  date.setMonth(date.getMonth() + 14);
   return date;
 }
 

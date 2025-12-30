@@ -1,10 +1,9 @@
 import { useParams, Link, useLocation } from "wouter";
 import { useCar } from "@/hooks/use-cars";
 import { useServiceLogs } from "@/hooks/use-service-logs";
-import { useReminders } from "@/hooks/use-reminders";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ChevronLeft, Calendar, Gauge, Settings, PenTool, AlertTriangle } from "lucide-react";
+import { ChevronLeft, Calendar, Gauge, Settings, PenTool } from "lucide-react";
 import { AddServiceDialog } from "@/components/ui-custom/AddServiceDialog";
 import { EditVehicleDialog } from "@/components/ui-custom/EditVehicleDialog";
 import { ServiceItem } from "@/components/ui-custom/ServiceItem";
@@ -178,12 +177,6 @@ export default function VehicleDetails() {
               Servicehistorik
             </TabsTrigger>
             <TabsTrigger 
-              value="reminders" 
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-0 py-3 font-semibold text-muted-foreground data-[state=active]:text-foreground transition-all"
-            >
-              Påminnelser
-            </TabsTrigger>
-            <TabsTrigger 
               value="notes" 
               className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-0 py-3 font-semibold text-muted-foreground data-[state=active]:text-foreground transition-all"
             >
@@ -219,16 +212,6 @@ export default function VehicleDetails() {
                   <ServiceItem key={serviceLog.id} service={serviceLog} />
                 ))
             )}
-          </TabsContent>
-          
-          <TabsContent value="reminders">
-             <div className="bg-card rounded-xl border border-border p-8 text-center">
-               <AlertTriangle className="w-12 h-12 text-accent/50 mx-auto mb-4" />
-               <h3 className="text-lg font-semibold">Påminnelser kommer snart</h3>
-               <p className="text-muted-foreground">
-                 Den här funktionen hjälper dig att spåra kommande underhål baserat på körsträcka.
-               </p>
-             </div>
           </TabsContent>
 
           <TabsContent value="notes">

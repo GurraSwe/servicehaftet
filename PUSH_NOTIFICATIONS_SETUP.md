@@ -129,7 +129,7 @@ Or push to your connected Git repository.
 2. **Daily check:** Vercel Cron calls `/api/cron/inspection-reminders` daily at 9 AM UTC
 3. **Edge Function:** The function:
    - Queries cars with `last_inspection_date`
-   - Calculates `next_inspection_date` (last_inspection_date + 13 months)
+   - Calculates `next_inspection_date` (last_inspection_date + 14 months)
    - Finds cars where inspection is due in 7 days or today
    - Fetches push subscriptions for those users
    - Sends push notifications via Web Push API
